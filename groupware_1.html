@@ -1,0 +1,3029 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>결재온 그룹웨어</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onerror="this.remove()">
+<style>
+:root{
+  --paper:#F3F4F6; --card:#FFFFFF; --ink:#1E2430; --sub:#6C7482; --line:#E2E5EA;
+  --navy:#2C4A66; --navy-d:#20374C; --navy-t:#EAF0F5;
+  --stamp:#C13B2E; --stamp-t:#FBEEEC;
+  --ok:#2F7D5C; --ok-t:#E9F3EE; --warn:#B67A1F; --warn-t:#F9F1E2;
+  --r:12px; --shadow:0 1px 3px rgba(30,36,48,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
+  background:var(--paper); color:var(--ink); font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit; cursor:pointer; border:none; background:none; font-size:inherit; color:inherit}
+input,select,textarea{
+  font-family:inherit; font-size:15px; color:var(--ink);
+  border:1px solid var(--line); border-radius:8px; padding:10px 12px; width:100%; background:#fff;
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy); outline-offset:-1px; border-color:var(--navy)}
+label{display:block; font-size:13px; font-weight:600; color:var(--sub); margin:14px 0 5px}
+h2{font-size:19px; font-weight:700}
+h3{font-size:16px; font-weight:700}
+.hidden{display:none!important}
+
+/* ── 인장(도장) 로고 ── */
+.seal{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border:2px solid var(--stamp); border-radius:8px;
+  color:var(--stamp); font-weight:800; font-size:17px; background:#fff;
+  box-shadow:inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(193,59,46,.35);
+  transform:rotate(-4deg); flex:none;
+}
+
+/* ── 로그인 ── */
+#loginView{
+  min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:linear-gradient(160deg,var(--navy-d) 0%,var(--navy) 60%,#3A5F80 100%); padding:24px;
+}
+.login-card{background:#fff; border-radius:16px; padding:34px 28px; width:100%; max-width:380px; box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.login-brand{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+.login-brand .seal{width:44px; height:44px; font-size:22px}
+.login-brand h1{font-size:24px; font-weight:800; letter-spacing:-.5px}
+.login-sub{color:var(--sub); font-size:13px; margin-bottom:10px}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  background:var(--navy); color:#fff; font-weight:700; border-radius:9px;
+  padding:12px 18px; width:100%; margin-top:18px; transition:background .15s;
+}
+.btn:hover{background:var(--navy-d)}
+.btn.small{width:auto; padding:8px 14px; font-size:13px; margin-top:0}
+.btn.ghost{background:#fff; color:var(--navy); border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--navy-t)}
+.btn.danger{background:var(--stamp)}
+.btn.danger:hover{background:#A32F24}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.login-hint{margin-top:16px; padding:11px 13px; background:var(--paper); border-radius:8px; font-size:12.5px; color:var(--sub)}
+.login-err{color:var(--stamp); font-size:13px; margin-top:12px; font-weight:600}
+
+/* ── 앱 레이아웃 ── */
+#appView{display:flex; min-height:100dvh}
+.sidebar{
+  width:228px; flex:none; background:var(--navy-d); color:#fff; padding:20px 14px;
+  display:flex; flex-direction:column; gap:4px; position:sticky; top:0; height:100dvh;
+}
+.sidebar .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 18px; font-size:18px; font-weight:800}
+.sidebar .brand .seal{background:var(--navy-d); border-color:#E8A79F; color:#F3C2BB; box-shadow:none; width:30px; height:30px; font-size:15px}
+.nav-item{
+  display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:9px;
+  color:#C6D2DD; font-weight:600; font-size:14.5px; text-align:left; width:100%;
+}
+.nav-item .ico{font-size:17px; width:22px; text-align:center}
+.nav-item:hover{background:rgba(255,255,255,.08); color:#fff}
+.nav-item.active{background:rgba(255,255,255,.14); color:#fff}
+.nav-badge{margin-left:auto; background:var(--stamp); color:#fff; font-size:11px; font-weight:700; border-radius:99px; padding:1px 7px}
+.sidebar .spacer{flex:1}
+.main{flex:1; min-width:0; display:flex; flex-direction:column}
+.topbar{
+  background:#fff; border-bottom:1px solid var(--line); padding:12px 20px;
+  display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:20;
+}
+.topbar .title{font-size:17px; font-weight:800; flex:1}
+.user-chip{display:flex; align-items:center; gap:9px; font-size:13.5px}
+.avatar{
+  width:32px; height:32px; border-radius:50%; background:var(--navy-t); color:var(--navy);
+  display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex:none;
+}
+.content{padding:18px 20px 90px; max-width:920px; width:100%; margin:0 auto}
+
+/* 모바일 하단 탭 */
+.tabbar{
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:30;
+  background:#fff; border-top:1px solid var(--line);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.tabbar .tabs{display:flex}
+.tab{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-size:10.5px; font-weight:600; color:var(--sub); padding:5px 0; position:relative;
+}
+.tab .ico{font-size:20px}
+.tab.active{color:var(--navy)}
+.tab .dot{position:absolute; top:2px; right:calc(50% - 16px); width:8px; height:8px; border-radius:50%; background:var(--stamp)}
+@media(max-width:820px){
+  .sidebar{display:none}
+  .tabbar{display:block}
+  .content{padding:14px 14px 96px}
+}
+
+/* ── 카드/리스트 공통 ── */
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; margin-bottom:14px}
+.card .card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:8px}
+.card .card-head .more{font-size:13px; color:var(--sub); font-weight:600}
+.stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px}
+.stat{background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; box-shadow:var(--shadow)}
+.stat .k{font-size:12.5px; color:var(--sub); font-weight:600}
+.stat .v{font-size:22px; font-weight:800; margin-top:2px}
+.stat .v small{font-size:13px; font-weight:600; color:var(--sub)}
+.list-row{
+  display:flex; align-items:center; gap:10px; padding:12px 4px; border-bottom:1px solid var(--line);
+  width:100%; text-align:left;
+}
+.list-row:last-child{border-bottom:none}
+.list-row .grow{flex:1; min-width:0}
+.list-row .t{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.list-row .s{font-size:12.5px; color:var(--sub); margin-top:1px}
+.pill{font-size:11.5px; font-weight:700; border-radius:99px; padding:3px 10px; flex:none}
+.pill.wait{background:var(--warn-t); color:var(--warn)}
+.pill.ok{background:var(--ok-t); color:var(--ok)}
+.pill.no{background:var(--stamp-t); color:var(--stamp)}
+.pill.ing{background:var(--navy-t); color:var(--navy)}
+.empty{padding:34px 10px; text-align:center; color:var(--sub); font-size:13.5px}
+.seg{display:flex; background:#fff; border:1px solid var(--line); border-radius:10px; padding:3px; margin-bottom:14px; overflow-x:auto}
+.seg button{flex:1; padding:8px 12px; border-radius:8px; font-size:13.5px; font-weight:700; color:var(--sub); white-space:nowrap}
+.seg button.active{background:var(--navy); color:#fff}
+.toolbar{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+table.grid{width:100%; border-collapse:collapse; font-size:13.5px}
+table.grid th{background:var(--paper); font-weight:700; color:var(--sub); font-size:12.5px}
+table.grid th,table.grid td{border:1px solid var(--line); padding:8px 9px; text-align:center}
+table.grid td.l{text-align:left}
+table.grid td.r{text-align:right}
+.table-wrap{overflow-x:auto}
+
+/* ── 결재 문서 상세 + 도장 ── */
+.doc-sheet{background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:22px 20px; box-shadow:var(--shadow)}
+.doc-sheet .doc-title{font-size:19px; font-weight:800; padding-bottom:12px; border-bottom:2px solid var(--ink)}
+.doc-meta{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:13.5px; margin:12px 0; color:var(--sub)}
+.doc-meta b{color:var(--ink)}
+.doc-body{white-space:pre-wrap; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); min-height:80px}
+.appr-line{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap}
+.appr-box{
+  border:1.5px solid var(--line); border-radius:10px; width:96px; text-align:center; overflow:hidden; background:#fff;
+}
+.appr-box .role{background:var(--paper); font-size:11px; font-weight:700; color:var(--sub); padding:4px}
+.appr-box .sign{height:64px; display:flex; align-items:center; justify-content:center; position:relative}
+.appr-box .nm{font-size:12px; padding:4px; border-top:1px solid var(--line); font-weight:600}
+.stamp-mark{
+  width:52px; height:52px; border-radius:50%; border:2.5px solid var(--stamp); color:var(--stamp);
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px;
+  box-shadow:inset 0 0 0 2px #fff, inset 0 0 0 3.5px rgba(193,59,46,.45);
+  transform:rotate(-8deg); letter-spacing:1px;
+  animation:stampIn .25s cubic-bezier(.2,1.6,.4,1);
+}
+.stamp-mark.reject{border-color:#555; color:#555; box-shadow:inset 0 0 0 2px #fff, inset 0 0 0 3.5px rgba(85,85,85,.4)}
+@keyframes stampIn{from{transform:rotate(-8deg) scale(1.6); opacity:0}to{transform:rotate(-8deg) scale(1); opacity:1}}
+@media(prefers-reduced-motion:reduce){.stamp-mark{animation:none}}
+.appr-wait{color:#C9CED6; font-size:12px; font-weight:700}
+.comment-log{margin-top:14px; font-size:13px}
+.comment-log .c{padding:8px 10px; background:var(--paper); border-radius:8px; margin-top:6px}
+
+/* ── 근태 시계 ── */
+.clock-card{text-align:center; padding:26px 18px}
+.clock-time{font-size:38px; font-weight:800; letter-spacing:1px; font-variant-numeric:tabular-nums}
+.clock-date{color:var(--sub); font-size:13.5px; margin-bottom:14px}
+.clock-btns{display:flex; gap:10px; justify-content:center}
+.clock-btns .btn{width:auto; min-width:120px; margin-top:0}
+.clock-state{margin-top:12px; font-size:13.5px; color:var(--sub)}
+
+/* ── 급여 명세 ── */
+.pay-net{font-size:26px; font-weight:800; color:var(--navy)}
+.pay-table{width:100%; font-size:13.5px; border-collapse:collapse; margin-top:10px}
+.pay-table td{padding:7px 2px; border-bottom:1px dashed var(--line)}
+.pay-table td:last-child{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
+.pay-table tr.sum td{border-bottom:none; font-weight:800; padding-top:10px}
+.pay-table tr.deduct td:last-child{color:var(--stamp)}
+
+/* ── 스케줄 달력 ── */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-head .ym{font-size:17px;font-weight:800}
+.cal-nav{display:flex;gap:6px}
+.cal-nav button{border:1px solid var(--line);border-radius:8px;background:#fff;padding:5px 12px;font-weight:700}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.cal .dow{background:var(--paper);text-align:center;font-size:11.5px;font-weight:700;color:var(--sub);padding:7px 0;border-bottom:1px solid var(--line)}
+.cal .dow.sun{color:var(--stamp)} .cal .dow.sat{color:var(--navy)}
+.cal .day{min-height:86px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px;text-align:left;vertical-align:top;background:#fff;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.cal .day:nth-child(7n){border-right:none}
+.cal .day .dn{font-size:11.5px;font-weight:700}
+.cal .day.dim{background:#FAFBFC}.cal .day.dim .dn{color:#C4C9D2}
+.cal .day.today{outline:2px solid var(--navy);outline-offset:-2px}
+.cal .day.sun .dn{color:var(--stamp)}.cal .day.sat .dn{color:var(--navy)}
+.ev{font-size:10px;font-weight:700;background:#6C5CE7;color:#fff;border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh{font-size:10px;font-weight:600;border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--navy-t);color:var(--navy)}
+.sh.fix{background:var(--ok-t);color:var(--ok)}
+.sh.mine{outline:1.5px solid var(--navy)}
+@media(max-width:600px){.cal .day{min-height:66px}.ev,.sh{font-size:9px}}
+@media(min-width:1200px){
+  .content{max-width:1160px}
+  .cal .day{min-height:118px}
+  .ev,.sh{font-size:11px}
+  .doc-sheet{padding:30px 34px}
+}
+.day-modal-list .list-row{padding:9px 2px}
+
+/* 모달 */
+.modal-bg{position:fixed; inset:0; background:rgba(20,26,36,.5); z-index:50; display:flex; align-items:flex-end; justify-content:center}
+@media(min-width:600px){.modal-bg{align-items:center}}
+.modal{background:#fff; border-radius:16px 16px 0 0; width:100%; max-width:520px; max-height:88dvh; overflow-y:auto; padding:22px 20px 26px}
+@media(min-width:600px){.modal{border-radius:16px}}
+.modal h3{margin-bottom:4px}
+.toast{
+  position:fixed; left:50%; bottom:92px; transform:translateX(-50%); z-index:99;
+  background:var(--ink); color:#fff; font-size:13.5px; font-weight:600;
+  padding:10px 18px; border-radius:99px; box-shadow:0 6px 20px rgba(0,0,0,.25);
+  opacity:0; transition:opacity .2s; pointer-events:none; white-space:nowrap;
+}
+.toast.show{opacity:1}
+.appr-picked{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+.appr-picked .chip{background:var(--navy-t); color:var(--navy); font-size:12.5px; font-weight:700; padding:4px 10px; border-radius:99px; display:inline-flex; gap:6px; align-items:center}
+.appr-picked .chip button{color:var(--navy); font-weight:800}
+</style>
+</head>
+<body>
+
+<!-- ══════════ 로그인 ══════════ -->
+<div id="loginView">
+  <div class="login-card">
+    <div class="login-brand"><span class="seal">決</span><h1>결재온</h1></div>
+    <div class="login-sub">사내 그룹웨어 · 전자결재 / 게시판 / 근태 / 급여</div>
+    <label for="loginId">사번</label>
+    <input id="loginId" inputmode="numeric" autocomplete="username" placeholder="예: 1001">
+    <label for="loginPw">비밀번호</label>
+    <input id="loginPw" type="password" autocomplete="current-password" placeholder="비밀번호 입력">
+    <div id="loginErr" class="login-err hidden"></div>
+    <button class="btn" id="btnLogin">로그인</button>
+    <button class="btn ghost" id="btnSignup" style="margin-top:8px">회원가입 (사원 신규 등록)</button>
+    <div class="login-hint" id="loginHint">
+      데모 계정 — 관리자: <b>1001 / admin1234</b> · 사원: <b>1002 / 1234</b><br>
+      최초 실행 시 샘플 데이터가 자동 생성됩니다.
+    </div>
+    <button id="btnSrvCfg" style="margin-top:12px;font-size:12.5px;color:var(--sub);text-decoration:underline;width:100%">⚙️ 서버 연결 설정 (60명 공용 모드)</button>
+  </div>
+</div>
+
+<!-- ══════════ 앱 ══════════ -->
+<div id="appView" class="hidden">
+  <nav class="sidebar" id="sideNav">
+    <div class="brand"><span class="seal">決</span>결재온</div>
+    <button class="nav-item" data-view="home"><span class="ico">🏠</span>홈</button>
+    <button class="nav-item" data-view="approval"><span class="ico">🖋️</span>전자결재<span class="nav-badge hidden" id="badgeAppr">0</span></button>
+    <button class="nav-item" data-view="schedule"><span class="ico">🗓️</span>근무 스케줄</button>
+    <button class="nav-item" data-view="board"><span class="ico">📋</span>게시판</button>
+    <button class="nav-item" data-view="attend"><span class="ico">⏰</span>근태관리</button>
+    <button class="nav-item" data-view="pay"><span class="ico">💰</span>급여</button>
+    <button class="nav-item hidden" data-view="admin" id="navAdmin"><span class="ico">⚙️</span>관리자</button>
+    <div class="spacer"></div>
+    <button class="nav-item" id="btnLogout"><span class="ico">🚪</span>로그아웃</button>
+  </nav>
+
+  <div class="main">
+    <header class="topbar">
+      <span class="seal" style="width:28px;height:28px;font-size:14px" aria-hidden="true">決</span>
+      <span class="title" id="topTitle">홈</span>
+      <span id="modeBadge" style="font-size:11px;font-weight:700;color:var(--sub)"></span>
+      <button id="btnBell" style="position:relative;font-size:19px;padding:4px" aria-label="알림">🔔<span id="bellBadge" class="nav-badge hidden" style="position:absolute;top:-2px;right:-6px">0</span></button>
+      <span class="user-chip"><span class="avatar" id="topAvatar">?</span><span id="topName"></span></span>
+      <button class="btn small ghost" id="btnLogout2">로그아웃</button>
+    </header>
+
+    <div class="content">
+      <!-- 홈 -->
+      <section id="view-home"></section>
+      <!-- 전자결재 -->
+      <section id="view-approval" class="hidden"></section>
+      <!-- 스케줄 -->
+      <section id="view-schedule" class="hidden"></section>
+      <!-- 게시판 -->
+      <section id="view-board" class="hidden"></section>
+      <!-- 근태 -->
+      <section id="view-attend" class="hidden"></section>
+      <!-- 급여 -->
+      <section id="view-pay" class="hidden"></section>
+      <!-- 관리자 -->
+      <section id="view-admin" class="hidden"></section>
+    </div>
+  </div>
+
+  <nav class="tabbar"><div class="tabs">
+    <button class="tab" data-view="home"><span class="ico">🏠</span>홈</button>
+    <button class="tab" data-view="approval"><span class="ico">🖋️</span>결재<span class="dot hidden" id="tabDotAppr"></span></button>
+    <button class="tab" data-view="schedule"><span class="ico">🗓️</span>스케줄</button>
+    <button class="tab" data-view="board"><span class="ico">📋</span>게시판</button>
+    <button class="tab" data-view="attend"><span class="ico">⏰</span>근태</button>
+    <button class="tab" data-view="pay"><span class="ico">💰</span>급여</button>
+  </div></nav>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<!-- ══════════ 핵심 로직 (DOM 무관 · 단위테스트 대상) ══════════ -->
+<script id="coreLogic">
+"use strict";
+const CORE = (() => {
+
+  const fmtMoney = n => (n ?? 0).toLocaleString("ko-KR");
+  const pad2 = n => String(n).padStart(2, "0");
+  const dateStr = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  const monthStr = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+  const timeStr = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const floor10 = n => Math.floor(Math.round(n) / 10) * 10;
+
+  /* ── 급여: 4대보험 + 간이 소득세(근사) + 소액부징수 ──
+     요율(2025~26 기준 근사): 국민연금 4.5%(기준소득월액 상한 637만),
+     건강보험 3.545%, 장기요양 = 건강보험료의 12.95%, 고용보험 0.9% */
+  function estimateIncomeTax(taxableMonthly, dependents = 1) {
+    // 간이세액표 근사식(프로토타입): 연환산 과세표준 누진 적용 후 월할
+    if (taxableMonthly < 1_060_000) return 0;      // 간이세액표 과세 하한
+    const annual = taxableMonthly * 12;
+    const laborDeduct =
+      annual <= 5_000_000 ? annual * 0.7 :
+      annual <= 15_000_000 ? 3_500_000 + (annual - 5_000_000) * 0.4 :
+      annual <= 45_000_000 ? 7_500_000 + (annual - 15_000_000) * 0.15 :
+      annual <= 100_000_000 ? 12_000_000 + (annual - 45_000_000) * 0.05 :
+      14_750_000 + (annual - 100_000_000) * 0.02;
+    const personal = 1_500_000 * Math.max(1, dependents);
+    const base = Math.max(0, annual - laborDeduct - personal);
+    let tax =
+      base <= 14_000_000 ? base * 0.06 :
+      base <= 50_000_000 ? 840_000 + (base - 14_000_000) * 0.15 :
+      base <= 88_000_000 ? 6_240_000 + (base - 50_000_000) * 0.24 :
+      base <= 150_000_000 ? 15_360_000 + (base - 88_000_000) * 0.35 :
+      37_060_000 + (base - 150_000_000) * 0.38;
+    // 근로소득세액공제(간이 근사): 산출세액 55%/30%, 한도 74만
+    const credit = Math.min(740_000, tax <= 1_300_000 ? tax * 0.55 : 715_000 + (tax - 1_300_000) * 0.30);
+    tax = Math.max(0, tax - credit);
+    return floor10(tax / 12);
+  }
+
+  const DEFAULT_RATES = { pension: 0.045, health: 0.03545, careOfHealth: 0.1295, employ: 0.009, npCap: 6_370_000 };
+  function calcPayroll({ base = 0, allowance = 0, overtime = 0, mealTaxFree = 200_000, dependents = 1, rates = DEFAULT_RATES }) {
+    const R = { ...DEFAULT_RATES, ...rates };
+    const gross = base + allowance + overtime;
+    const taxable = Math.max(0, gross - Math.min(mealTaxFree, gross));
+    const npBase = Math.min(taxable, R.npCap);
+    const pension = floor10(npBase * R.pension);
+    const health  = floor10(taxable * R.health);
+    const care    = floor10(health * R.careOfHealth);
+    const employ  = floor10(taxable * R.employ);
+    let incomeTax = estimateIncomeTax(taxable, dependents);
+    if (incomeTax < 1000) incomeTax = 0;            // 소액부징수
+    const localTax = floor10(incomeTax * 0.1);
+    const totalDeduct = pension + health + care + employ + incomeTax + localTax;
+    return { gross, taxable, pension, health, care, employ, incomeTax, localTax, totalDeduct, net: gross - totalDeduct };
+  }
+
+  /* ── 일용직 급여: 일당 기준, 고용보험만 적용
+     일용근로소득세 = (일당 - 비과세한도) × 6% × 45%(=2.7%), 일별 소액부징수(1,000원 미만 0) ── */
+  function calcDailyPayroll({ dailyWage = 0, days = 0, otMin = 0, otMult = 1.5, nightMin = 0, juhyuMin = 0, holidayMin = 0,
+                              taxFreeDaily = 150_000, employRate = 0.009, insure = false, rates = DEFAULT_RATES }) {
+    const R = { ...DEFAULT_RATES, ...rates };
+    const hourly = dailyWage / 8;
+    const otPay = floor10(hourly * otMult * (otMin / 60));
+    const nightPay = floor10(hourly * 0.5 * (nightMin / 60));      // 야간(22시~) 0.5배 가산
+    const juhyuPay = floor10(hourly * (juhyuMin / 60));             // 주휴수당
+    const holidayPay = floor10(hourly * 0.5 * (holidayMin / 60));   // 휴일(일요일) 0.5배 가산
+    const gross = dailyWage * days + otPay + nightPay + juhyuPay + holidayPay;
+    const employ = floor10(gross * employRate);
+    // 4대보험 자동 적용(월 8일 이상 등 가입 요건 충족 시): 국민연금·건강보험·장기요양
+    const npBase = Math.min(gross, R.npCap);
+    const pension = insure ? floor10(npBase * R.pension) : 0;
+    const health  = insure ? floor10(gross * R.health) : 0;
+    const care    = insure ? floor10(health * R.careOfHealth) : 0;
+    let perDayTax = Math.floor(Math.max(0, dailyWage - taxFreeDaily) * 0.06 * 0.45);
+    if (perDayTax < 1000) perDayTax = 0;             // 일별 소액부징수
+    const incomeTax = perDayTax * days;
+    const localTax = floor10(perDayTax * 0.1) * days;
+    const totalDeduct = employ + pension + health + care + incomeTax + localTax;
+    return { gross, otPay, nightPay, juhyuPay, holidayPay, pension, health, care, employ, incomeTax, localTax, totalDeduct, net: gross - totalDeduct };
+  }
+
+  /* 야간근로(22:00~) 겹침 분 계산 — 당일 HH:MM 범위 */
+  function nightOverlapMin(startHM, endHM) {
+    const st = toMin(startHM), en = toMin(endHM);
+    if (st == null || en == null || en <= st) return 0;
+    const early = Math.max(0, Math.min(en, 6 * 60) - st);              // 새벽 00~06
+    const late  = Math.max(0, Math.min(en, 24 * 60) - Math.max(st, 22 * 60)); // 22~24
+    return early + late;
+  }
+  /* 주차 키: 해당 날짜가 속한 주의 월요일 */
+  function weekKey(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return dateStr.slice(0, 4) + "-W" + pad2(d.getMonth() + 1) + pad2(d.getDate());
+  }
+
+  /* ── 근태 판정: 09:00 출근 / 18:00 퇴근 기준 ── */
+  function toMin(hm) { if (!hm) return null; const [h, m] = hm.split(":").map(Number); return h * 60 + m; }
+  const DEFAULT_WORK = { startMin: 9 * 60, endMin: 18 * 60, breakMin: 60 };
+  function judgeAttendance(inTime, outTime, pol = DEFAULT_WORK) {
+    const i = toMin(inTime), o = toMin(outTime);
+    if (i == null) return { status: "결근", workMin: 0 };
+    let status = i > pol.startMin ? "지각" : "정상";
+    let workMin = 0;
+    if (o != null) {
+      workMin = Math.max(0, o - i - pol.breakMin);   // 휴게 공제
+      if (o < pol.endMin && status === "정상") status = "조퇴";
+      else if (o < pol.endMin && status === "지각") status = "지각·조퇴";
+    } else {
+      status += " (근무중)";
+    }
+    return { status, workMin };
+  }
+  const minToHM = m => `${Math.floor(m / 60)}시간 ${m % 60}분`;
+
+  /* ── 전자결재 상태 전이 ──
+     doc.line = [{userId,name,position,status:'대기'|'승인'|'반려',date,comment}] */
+  function approveStep(doc, userId, action, comment = "") {
+    if (doc.status !== "진행") return { ok: false, msg: "이미 종결된 문서입니다." };
+    const idx = doc.line.findIndex(s => s.status === "대기");
+    if (idx === -1) return { ok: false, msg: "결재할 단계가 없습니다." };
+    if (doc.line[idx].userId !== userId) return { ok: false, msg: "현재 결재 순서가 아닙니다." };
+    const step = doc.line[idx];
+    step.date = new Date().toISOString();
+    step.comment = comment;
+    if (action === "approve") {
+      step.status = "승인";
+      if (idx === doc.line.length - 1) { doc.status = "완료"; doc.completedAt = step.date; }
+      else doc.currentStep = idx + 1;
+    } else if (action === "reject") {
+      step.status = "반려";
+      doc.status = "반려";
+      doc.completedAt = step.date;
+    } else return { ok: false, msg: "알 수 없는 동작입니다." };
+    return { ok: true, doc };
+  }
+
+  function myTurn(doc, userId) {
+    if (doc.status !== "진행") return false;
+    const idx = doc.line.findIndex(s => s.status === "대기");
+    return idx !== -1 && doc.line[idx].userId === userId;
+  }
+
+  return { fmtMoney, pad2, dateStr, monthStr, timeStr, calcPayroll, calcDailyPayroll, nightOverlapMin, weekKey, estimateIncomeTax,
+           judgeAttendance, minToHM, approveStep, myTurn, toMin, DEFAULT_WORK, DEFAULT_RATES };
+})();
+globalThis.CORE = CORE;
+if (typeof module !== "undefined") module.exports = CORE;
+</script>
+
+<!-- ══════════ 데이터 계층 (IndexedDB) ══════════ -->
+<script id="dbLayer">
+"use strict";
+let DB = (() => {
+  const NAME = "groupwareDB", VER = 5;
+  const STORES = ["users", "docs", "posts", "payroll", "attendance", "auditlog", "settings", "schedule", "notify"];
+  let db = null;
+
+  function open() {
+    return new Promise((res, rej) => {
+      const rq = indexedDB.open(NAME, VER);
+      rq.onupgradeneeded = e => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains("users"))      d.createObjectStore("users", { keyPath: "id" });
+        if (!d.objectStoreNames.contains("docs"))       d.createObjectStore("docs", { keyPath: "docId", autoIncrement: true });
+        if (!d.objectStoreNames.contains("posts"))      d.createObjectStore("posts", { keyPath: "postId", autoIncrement: true });
+        if (!d.objectStoreNames.contains("payroll"))    d.createObjectStore("payroll", { keyPath: "payId", autoIncrement: true });
+        if (!d.objectStoreNames.contains("attendance")) d.createObjectStore("attendance", { keyPath: "attId", autoIncrement: true });
+        if (!d.objectStoreNames.contains("auditlog"))   d.createObjectStore("auditlog", { keyPath: "logId", autoIncrement: true });
+        if (!d.objectStoreNames.contains("settings"))   d.createObjectStore("settings", { keyPath: "key" });
+        if (!d.objectStoreNames.contains("schedule"))   d.createObjectStore("schedule", { keyPath: "schId", autoIncrement: true });
+        if (!d.objectStoreNames.contains("notify"))     d.createObjectStore("notify", { keyPath: "nid", autoIncrement: true });
+      };
+      rq.onsuccess = e => { db = e.target.result; res(db); };
+      rq.onerror = e => rej(e.target.error);
+    });
+  }
+  const tx = (store, mode) => db.transaction(store, mode).objectStore(store);
+  const wrap = rq => new Promise((res, rej) => { rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); });
+
+  return {
+    open,
+    get:    (s, k) => wrap(tx(s, "readonly").get(k)),
+    all:    s      => wrap(tx(s, "readonly").getAll()),
+    put:    (s, v) => wrap(tx(s, "readwrite").put(v)),
+    add:    (s, v) => wrap(tx(s, "readwrite").add(v)),
+    del:    (s, k) => wrap(tx(s, "readwrite").delete(k)),
+    count:  s      => wrap(tx(s, "readonly").count()),
+  };
+})();
+/* ── 원격 백엔드 어댑터 (Google Apps Script) ──
+   서버 URL/키가 설정되면 IndexedDB 대신 사용. 동일 인터페이스. */
+const RemoteDB = (() => {
+  const TTL = 12000;                       // 60명 부하 완화: 스토어별 12초 캐시
+  let cache = {};                          // {store: {data, ts}}
+  const cfg = () => ({ url: localStorage.getItem("gw_api_url") || "", key: localStorage.getItem("gw_api_key") || "" });
+  const inval = store => { delete cache[store]; };
+  async function call(body) {
+    const { url, key } = cfg();
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },   // preflight 회피
+      body: JSON.stringify({ key, ...body }),
+    });
+    const j = await res.json();
+    if (!j.ok) throw new Error(j.msg || "서버 오류");
+    return j.data;
+  }
+  return {
+    isConfigured: () => !!cfg().url,
+    open: async () => { const p = await call({ action: "ping" }); if (p !== "pong") throw new Error("서버 응답 이상"); return true; },
+    invalidate: () => { cache = {}; },
+    all: async store => {
+      const c = cache[store];
+      if (c && Date.now() - c.ts < TTL) return c.data;
+      const data = await call({ action: "all", store });
+      cache[store] = { data, ts: Date.now() };
+      return data;
+    },
+    get: async (store, id) => call({ action: "get", store, id }),
+    put: async (store, value) => { const r = await call({ action: "put", store, value }); inval(store); return r; },
+    add: async (store, value) => { const r = await call({ action: "add", store, value }); inval(store); return r; },
+    del: async (store, id) => { const r = await call({ action: "del", store, id }); inval(store); return r; },
+    count: async store => call({ action: "count", store }),
+  };
+})();
+let LocalDB = DB;
+if (RemoteDB.isConfigured()) DB = RemoteDB;
+globalThis.DB = DB;
+globalThis.RemoteDB = RemoteDB;
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/* ── 시스템 설정 (관리자 변경 가능 · 기본값 병합) ── */
+const CFG_DEFAULTS = {
+  work: { start: "09:00", end: "18:00", breakMin: 60 },
+  pay: { allowanceDefault: 200000, mealTaxFree: 200000, otMult: 1.5, monthHours: 209,
+         pensionPct: 4.5, healthPct: 3.545, carePct: 12.95, employPct: 0.9, npCap: 6370000 },
+  daily: { taxFree: 150000, employPct: 0.9, otOn: true, nightOn: true, juhyuOn: true, holidayOn: true, autoInsure: true, insureMinDays: 8 },
+  attendIp: { enabled: false, list: [] },
+  payBasis: "attendance",   // attendance | schedule
+  payItems: [],             // {name, type:'수당(과세)'|'수당(비과세)'|'공제', amount, target:'all'|'regular'|'daily'}
+  signup: {
+    depts: ["하우스팀", "무대운영팀", "기획팀", "경영지원팀"],
+    positions: ["어셔", "사원", "대리", "매니저", "팀장"],
+    notice: "가입 신청 후 관리자 승인이 완료되면 발급된 사번으로 로그인할 수 있습니다.\n사번은 관리자에게 안내받으세요.",
+  },
+  docTypes: [
+    { name: "일반품의", template: "1. 목적 :\n2. 내용 :\n3. 소요예산 :\n4. 기타 :" },
+    { name: "지출결의", template: "1. 지출 내역 :\n2. 금액 :\n3. 지급처 :\n4. 증빙 : 첨부" },
+    { name: "휴가신청", template: "휴가 사유 :\n인수인계 사항 :" },
+    { name: "근무신청", template: "근무 사유(공연/행사) :\n담당 업무 :" },
+  ],
+  payPolicy: "· 초과근무수당: 통상시급 × 1.5배 (사전 근무신청 승인 원칙)\n· 일용직: 일당 기준, 일 15만원 비과세, 일용근로소득세 2.7%\n· 급여 지급일: 매월 말일",
+  boards: [{ key: "notice", name: "공지사항", write: "admin" }, { key: "free", name: "자유게시판", write: "all" }],
+};
+let CFG = JSON.parse(JSON.stringify(CFG_DEFAULTS));
+async function loadCFG() {
+  const rows = await DB.all("settings");
+  CFG = JSON.parse(JSON.stringify(CFG_DEFAULTS));
+  for (const r of rows) if (r.key in CFG) CFG[r.key] = typeof CFG_DEFAULTS[r.key] === "object" && !Array.isArray(CFG_DEFAULTS[r.key]) ? { ...CFG_DEFAULTS[r.key], ...r.value } : r.value;
+  globalThis.CFG = CFG;
+}
+async function saveCFG(key) { await DB.put("settings", { key, value: CFG[key] }); }
+globalThis.CFG = CFG;
+const workPol = () => ({ startMin: CORE.toMin(CFG.work.start), endMin: CORE.toMin(CFG.work.end), breakMin: Number(CFG.work.breakMin) || 60 });
+const payRates = () => ({ pension: CFG.pay.pensionPct / 100, health: CFG.pay.healthPct / 100, careOfHealth: CFG.pay.carePct / 100, employ: CFG.pay.employPct / 100, npCap: Number(CFG.pay.npCap) });
+
+/* ── 시드 데이터 ── */
+async function seedIfEmpty() {
+  if (await DB.count("users") > 0) return false;
+  const now = new Date();
+  const users = [
+    { id: "1001", name: "김관리", dept: "경영지원팀", position: "팀장", role: "admin", pwHash: await sha256("admin1234"), salaryBase: 4200000, joinDate: "2019-03-02" },
+    { id: "1002", name: "이서연", dept: "무대운영팀", position: "매니저", role: "user", pwHash: await sha256("1234"), salaryBase: 3400000, joinDate: "2021-07-12" },
+    { id: "1003", name: "박준호", dept: "하우스팀",   position: "사원",   role: "user", pwHash: await sha256("1234"), salaryBase: 2800000, joinDate: "2023-01-09" },
+    { id: "1004", name: "최민아", dept: "기획팀",     position: "대리",   role: "user", pwHash: await sha256("1234"), salaryBase: 3100000, joinDate: "2022-05-16" },
+    { id: "2001", name: "김일용", dept: "하우스팀",   position: "어셔",   role: "user", pwHash: await sha256("1234"), salaryBase: 0, empType: "daily", dailyWage: 100000, joinDate: "2024-11-01" },
+  ];
+  users.forEach(u => { if (!u.empType) u.empType = "regular"; u.status = "active"; });
+  for (const u of users) await DB.put("users", u);
+
+  await DB.add("posts", { board: "notice", title: "그룹웨어 오픈 안내", body: "결재온 그룹웨어가 오픈했습니다.\n전자결재·근태·급여 기능을 이용해 주세요.\n문의: 경영지원팀", authorId: "1001", authorName: "김관리", createdAt: now.toISOString(), views: 12, comments: [] });
+  await DB.add("posts", { board: "notice", title: "7월 급여명세서 확인 안내", body: "급여 메뉴에서 본인 명세서를 확인할 수 있습니다.", authorId: "1001", authorName: "김관리", createdAt: now.toISOString(), views: 5, comments: [] });
+  await DB.add("posts", { board: "free", title: "공연장 근처 점심 맛집 추천받아요", body: "하우스팀 박준호입니다. 추천 부탁드립니다!", authorId: "1003", authorName: "박준호", createdAt: now.toISOString(), views: 8, comments: [{ authorId: "1004", authorName: "최민아", body: "후문 국숫집 추천!", date: now.toISOString() }] });
+
+  // 완료된 샘플 결재 문서 (도장 확인용)
+  await DB.add("docs", {
+    type: "일반품의", title: "무대 조명 소모품 구매 품의", docNo: "무대운영팀-1001",
+    body: "공연장 2층 조명 교체용 소모품 구매를 요청합니다.\n- LED PAR 램프 10개\n- 예상 비용: 350,000원",
+    drafterId: "1002", drafterName: "이서연", drafterDept: "무대운영팀", drafterPos: "매니저",
+    line: [{ userId: "1001", name: "김관리", position: "팀장", status: "승인", date: now.toISOString(), comment: "승인합니다." }],
+    currentStep: 1, status: "완료", createdAt: now.toISOString(), completedAt: now.toISOString(), meta: {},
+  });
+
+  // 지난달 급여 시드
+  const lastM = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const ym = CORE.monthStr(lastM);
+  for (const u of users.filter(x => x.empType === "regular")) {
+    const p = CORE.calcPayroll({ base: u.salaryBase, allowance: 200000, overtime: 0 });
+    await DB.add("payroll", { kind: "salary", userId: u.id, userName: u.name, ym, base: u.salaryBase, allowance: 200000, overtime: 0, ...p, issued: true, issuedAt: now.toISOString(), createdAt: now.toISOString() });
+  }
+  return true;
+}
+</script>
+
+<!-- ══════════ 서비스 계층 (업무 로직 · UI/시뮬레이션 공용) ══════════ -->
+<script id="svcLayer">
+"use strict";
+const SVC = (() => {
+  const stdDayMin = () => Math.max(1, CORE.toMin(CFG.work.end) - CORE.toMin(CFG.work.start) - (Number(CFG.work.breakMin) || 60));
+  const floor10 = n => Math.floor(Math.round(n) / 10) * 10;
+
+  async function notify(userIds, text, view = "home") {
+    const ids = Array.isArray(userIds) ? userIds : [userIds];
+    const ts = new Date().toISOString();
+    for (const uid of ids) {
+      if (!uid) continue;
+      try { await DB.add("notify", { userId: uid, text: String(text).slice(0, 120), view, read: false, ts }); } catch (e) {}
+    }
+  }
+
+  async function log(actor, action, detail = "") {
+    try {
+      await DB.add("auditlog", { ts: new Date().toISOString(), userId: actor?.id ?? "-", userName: actor?.name ?? "-", action, detail: String(detail).slice(0, 200) });
+    } catch (e) { /* 로그 실패가 업무를 막지 않음 */ }
+  }
+
+  /* ── 접속 IP 확인 (허용 IP 제한용) ── */
+  async function getClientIp() {
+    if (globalThis.__forcedIp) return globalThis.__forcedIp;   // 테스트/사내 강제 지정용
+    try {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 3000);
+      const r = await fetch("https://api.ipify.org?format=json", { signal: ctl.signal });
+      clearTimeout(t);
+      return (await r.json()).ip || null;
+    } catch (e) { return null; }
+  }
+  async function checkAttendIp() {
+    if (!CFG.attendIp || !CFG.attendIp.enabled) return { ok: true };
+    const ip = await getClientIp();
+    if (!ip) return { ok: false, msg: "접속 IP를 확인할 수 없어 출퇴근 체크가 제한됩니다." };
+    const allowed = (CFG.attendIp.list || []).some(p => p && (ip === p || ip.startsWith(p)));
+    return allowed ? { ok: true, ip } : { ok: false, msg: `허용되지 않은 IP(${ip})입니다. 사업장 네트워크에서 체크해주세요.` };
+  }
+
+  /* ── 근태 ── */
+  async function clockIn(user, now = new Date()) {
+    const ipChk = await checkAttendIp();
+    if (!ipChk.ok) return ipChk;
+    const date = CORE.dateStr(now);
+    const dup = (await DB.all("attendance")).find(a => a.userId === user.id && a.date === date);
+    if (dup) return { ok: false, msg: "이미 출근 처리되었습니다." };
+    const inTime = CORE.timeStr(now);
+    const j = CORE.judgeAttendance(inTime, null, workPol());
+    await DB.add("attendance", { userId: user.id, userName: user.name, date, inTime, outTime: null, workMin: 0, status: j.status });
+    await log(user, "출근", `${date} ${inTime}`);
+    return { ok: true, inTime };
+  }
+  async function clockOut(user, now = new Date()) {
+    const ipChk = await checkAttendIp();
+    if (!ipChk.ok) return ipChk;
+    const date = CORE.dateStr(now);
+    const a = (await DB.all("attendance")).find(x => x.userId === user.id && x.date === date);
+    if (!a) return { ok: false, msg: "출근 기록이 없습니다." };
+    if (a.outTime) return { ok: false, msg: "이미 퇴근 처리되었습니다." };
+    a.outTime = CORE.timeStr(now);
+    const j = CORE.judgeAttendance(a.inTime, a.outTime, workPol());
+    a.workMin = j.workMin; a.status = j.status;
+    await DB.put("attendance", a);
+    await log(user, "퇴근", `${date} ${a.outTime} (${a.status})`);
+    return { ok: true, outTime: a.outTime, status: a.status };
+  }
+
+  /* ── 전자결재 ── */
+  async function submitDoc({ drafter, type, title, body = "", meta = {}, lineUsers = [] }) {
+    if (!title) return { ok: false, msg: "제목이 없습니다." };
+    if (!lineUsers.length) return { ok: false, msg: "결재선이 없습니다." };
+    const docId = await DB.add("docs", {
+      type, title, body, meta,
+      drafterId: drafter.id, drafterName: drafter.name, drafterDept: drafter.dept, drafterPos: drafter.position,
+      line: lineUsers.map(u => ({ userId: u.id, name: u.name, position: u.position, status: "대기", date: null, comment: "" })),
+      currentStep: 0, status: "진행", createdAt: new Date().toISOString(),
+    });
+    // 문서번호 자동 채번: 부서명-번호 (아마란스 방식)
+    const nd = await DB.get("docs", docId);
+    nd.docNo = `${(drafter.dept || "일반").replace(/\s/g, "")}-${1000 + Number(docId)}`;
+    await DB.put("docs", nd);
+    await log(drafter, "문서상신", `${nd.docNo} [${type}] ${title}`);
+    await notify(lineUsers[0].id, `🖋️ 결재 요청: [${type}] ${title}`, "approval");
+    return { ok: true, docId, docNo: nd.docNo };
+  }
+
+  /* ── 상신 회수: 아무도 결재하지 않은 진행 문서만 기안자가 회수 가능 ── */
+  async function recallDoc(docId, actor) {
+    const d = await DB.get("docs", docId);
+    if (!d) return { ok: false, msg: "문서를 찾을 수 없습니다." };
+    if (d.drafterId !== actor.id) return { ok: false, msg: "기안자만 회수할 수 있습니다." };
+    if (d.status !== "진행") return { ok: false, msg: "진행중 문서만 회수할 수 있습니다." };
+    if (d.line.some(x => x.status !== "대기")) return { ok: false, msg: "이미 결재가 시작되어 회수할 수 없습니다." };
+    d.status = "회수"; d.completedAt = new Date().toISOString();
+    await DB.put("docs", d);
+    await log(actor, "문서회수", `${d.docNo || "#" + docId} ${d.title}`);
+    return { ok: true };
+  }
+
+  /* ── 연차 현황: 부여 - 승인된 연차 사용일 = 잔여 ── */
+  async function leaveStatus(userId) {
+    const u = await DB.get("users", userId);
+    const granted = (u && u.empType !== "daily") ? (u.annualLeave ?? 15) : 0;
+    const docs = (await DB.all("docs")).filter(d =>
+      d.drafterId === userId && d.type.includes("휴가") && d.status === "완료" && d.meta && d.meta.kind && d.meta.from);
+    let used = 0;
+    for (const d of docs) {
+      const m = d.meta;
+      const days = Math.max(1, Math.round((new Date(m.to || m.from) - new Date(m.from)) / 86400000) + 1);
+      if (m.kind.startsWith("연차")) used += days;
+      else if (m.kind.startsWith("반차")) used += 0.5 * days;
+      else if (m.kind.startsWith("시간차")) used += (m.hours || 0) / 8;
+      // 병가/경조사 등은 연차 미차감
+    }
+    used = Math.round(used * 100) / 100;
+    const remain = Math.round((granted - used) * 100) / 100;
+    return { granted, used, remain, rate: granted ? Math.round(used / granted * 100) : 0 };
+  }
+  async function actOnDoc(docId, actor, action, comment = "") {
+    const d = await DB.get("docs", docId);
+    if (!d) return { ok: false, msg: "문서를 찾을 수 없습니다." };
+    const r = CORE.approveStep(d, actor.id, action, comment);
+    if (!r.ok) return r;
+    await DB.put("docs", d);
+    await log(actor, action === "approve" ? "결재승인" : "결재반려", `#${docId} ${d.title} → ${d.status}`);
+    if (d.status === "진행") {
+      const next = d.line.find(x => x.status === "대기");
+      if (next) await notify(next.userId, `🖋️ 결재 요청: ${d.title}`, "approval");
+    } else {
+      await notify(d.drafterId, d.status === "완료" ? `✅ 결재 완료: ${d.title}` : `❌ 반려: ${d.title}`, "approval");
+    }
+    return { ok: true, status: d.status };
+  }
+
+  /* ── 공연/근무 스케줄 ── */
+  async function addEvent({ date, title, venue = "", perfTime = "", houseOpen = "", workStart = "", workEnd = "", note = "" }, actor) {
+    if (actor.role !== "admin") return { ok: false, msg: "공연 일정은 관리자만 등록할 수 있습니다." };
+    if (!date || !title) return { ok: false, msg: "날짜와 공연명을 입력하세요." };
+    if ((workStart && !workEnd) || (!workStart && workEnd)) return { ok: false, msg: "근무 시작·종료를 모두 입력하세요." };
+    if (workStart && CORE.toMin(workEnd) <= CORE.toMin(workStart)) return { ok: false, msg: "근무 종료가 시작보다 빨라요." };
+    const schId = await DB.add("schedule", { kind: "event", date, title, venue, perfTime, houseOpen, workStart, workEnd, note,
+      createdBy: actor.id, createdName: actor.name, createdAt: new Date().toISOString() });
+    await log(actor, "공연일정등록", `${date} ${title}${workStart ? ` 근무 ${workStart}~${workEnd}` : ""}`);
+    return { ok: true, schId };
+  }
+  async function updateEvent(schId, fields, actor) {
+    if (actor.role !== "admin") return { ok: false, msg: "관리자만 수정할 수 있습니다." };
+    const e = await DB.get("schedule", schId);
+    if (!e || e.kind !== "event") return { ok: false, msg: "일정을 찾을 수 없습니다." };
+    for (const k of ["title", "venue", "perfTime", "houseOpen", "workStart", "workEnd", "note"]) if (fields[k] != null) e[k] = fields[k];
+    if (e.workStart && e.workEnd && CORE.toMin(e.workEnd) <= CORE.toMin(e.workStart)) return { ok: false, msg: "근무 종료가 시작보다 빨라요." };
+    await DB.put("schedule", e);
+    await log(actor, "공연일정수정", `${e.date} ${e.title}`);
+    return { ok: true };
+  }
+  async function deleteEvent(schId, actor) {
+    const e = await DB.get("schedule", schId);
+    if (!e || e.kind !== "event") return { ok: false, msg: "일정을 찾을 수 없습니다." };
+    if (e.createdBy !== actor.id && actor.role !== "admin") return { ok: false, msg: "작성자 또는 관리자만 삭제할 수 있습니다." };
+    await DB.del("schedule", schId);
+    await log(actor, "공연일정삭제", `${e.date} ${e.title}`);
+    return { ok: true };
+  }
+  async function requestShift({ date, startTime, endTime, note = "", eventId = null }, actor) {
+    let evTitle = "";
+    if (eventId) {
+      // 공연 연동 근무: 시간은 관리자가 등록한 근무시간으로 강제
+      const ev = await DB.get("schedule", Number(eventId));
+      if (!ev || ev.kind !== "event" || ev.date !== date) return { ok: false, msg: "공연 정보를 찾을 수 없습니다." };
+      if (!ev.workStart || !ev.workEnd) return { ok: false, msg: "이 공연에는 근무시간이 등록되지 않았습니다. 관리자에게 문의하세요." };
+      startTime = ev.workStart; endTime = ev.workEnd; evTitle = ev.title;
+    }
+    if (!date || !startTime || !endTime) return { ok: false, msg: "날짜와 시간대를 입력하세요." };
+    if (CORE.toMin(endTime) <= CORE.toMin(startTime)) return { ok: false, msg: "종료 시각이 시작보다 빨라요." };
+    const dup = (await DB.all("schedule")).find(x => x.kind === "shift" && x.userId === actor.id && x.date === date);
+    if (dup) return { ok: false, msg: "해당 일자에 이미 근무 신청이 있습니다." };
+    const schId = await DB.add("schedule", { kind: "shift", date, userId: actor.id, userName: actor.name, empType: actor.empType || "regular",
+      startTime, endTime, note, eventId: eventId ? Number(eventId) : null, eventTitle: evTitle, status: "신청", createdAt: new Date().toISOString() });
+    await log(actor, "근무신청", `${date} ${startTime}~${endTime}${evTitle ? ` (${evTitle})` : ""}`);
+    return { ok: true, schId };
+  }
+  async function updateShift(schId, { startTime, endTime, status, note }, actor) {
+    const sh = await DB.get("schedule", schId);
+    if (!sh || sh.kind !== "shift") return { ok: false, msg: "근무 신청을 찾을 수 없습니다." };
+    const isAdmin = actor.role === "admin";
+    if (!isAdmin && sh.userId !== actor.id) return { ok: false, msg: "본인 신청만 수정할 수 있습니다." };
+    if (!isAdmin && sh.status === "확정") return { ok: false, msg: "확정된 근무는 관리자만 변경할 수 있습니다." };
+    if (status && !isAdmin) return { ok: false, msg: "확정 처리는 관리자만 가능합니다." };
+    if (startTime) sh.startTime = startTime;
+    if (endTime) sh.endTime = endTime;
+    if (note != null) sh.note = note;
+    if (status) sh.status = status;
+    if (sh.startTime && sh.endTime && CORE.toMin(sh.endTime) <= CORE.toMin(sh.startTime)) return { ok: false, msg: "종료 시각이 시작보다 빨라요." };
+    await DB.put("schedule", sh);
+    await log(actor, status ? "근무" + status : "근무수정", `${sh.userName} ${sh.date} ${sh.startTime}~${sh.endTime}`);
+    if (status === "확정") await notify(sh.userId, `🗓️ 근무 확정: ${sh.date} ${sh.startTime}~${sh.endTime}`, "schedule");
+    if (status === "신청") await notify(sh.userId, `🗓️ 근무 확정 해제: ${sh.date}`, "schedule");
+    return { ok: true, status: sh.status };
+  }
+  async function deleteShift(schId, actor) {
+    const sh = await DB.get("schedule", schId);
+    if (!sh || sh.kind !== "shift") return { ok: false, msg: "근무 신청을 찾을 수 없습니다." };
+    const isAdmin = actor.role === "admin";
+    if (!isAdmin && (sh.userId !== actor.id || sh.status === "확정")) return { ok: false, msg: "확정 근무 삭제는 관리자만 가능합니다." };
+    await DB.del("schedule", schId);
+    await log(actor, "근무삭제", `${sh.userName} ${sh.date}`);
+    return { ok: true };
+  }
+  /* 확정 스케줄 → 월 근무 집계 (급여 산정 기준 = schedule일 때 사용) */
+  async function monthSchedule(userId, ym) {
+    const std = stdDayMin();
+    const brk = Number(CFG.work.breakMin) || 60;
+    const rows = (await DB.all("schedule")).filter(x => x.kind === "shift" && x.userId === userId && x.status === "확정" && x.date.startsWith(ym));
+    const weekMin = {};
+    let otMin = 0, totalMin = 0, nightMin = 0, holidayMin = 0;
+    const details = [];
+    for (const r of rows) {
+      const wm = Math.max(0, CORE.toMin(r.endTime) - CORE.toMin(r.startTime) - brk);
+      totalMin += wm; otMin += Math.max(0, wm - std);
+      nightMin += CORE.nightOverlapMin(r.startTime, r.endTime);
+      if (isSunday(r.date)) holidayMin += wm;
+      weekMin[CORE.weekKey(r.date)] = (weekMin[CORE.weekKey(r.date)] || 0) + wm;
+      details.push({ date: r.date, s: r.startTime, e: r.endTime, min: wm, label: r.eventTitle || "일반 근무" });
+    }
+    details.sort((x, y) => x.date.localeCompare(y.date));
+    return { workDays: rows.length, otMin, lateN: 0, totalMin, nightMin, holidayMin, juhyuMin: juhyuFromWeeks(weekMin), details };
+  }
+
+  /* ── 근태 → 급여 자동 계산 ── */
+  function juhyuFromWeeks(weekMin) {
+    // 주 15시간(900분) 이상 근무한 주: (주간근로 ÷ 40h) × 8h, 최대 8h
+    let m = 0;
+    for (const wk in weekMin) if (weekMin[wk] >= 900) m += Math.min(480, Math.round(weekMin[wk] * 0.2));
+    return m;
+  }
+  const isSunday = ds => new Date(ds + "T00:00:00").getDay() === 0;
+  async function monthAttendance(userId, ym) {
+    const rows = (await DB.all("attendance")).filter(a => a.userId === userId && a.date.startsWith(ym) && a.outTime);
+    const std = stdDayMin();
+    const weekMin = {};
+    let otMin = 0, totalMin = 0, nightMin = 0, holidayMin = 0;
+    const details = [];
+    for (const a of rows) {
+      const wm = a.workMin || 0;
+      otMin += Math.max(0, wm - std); totalMin += wm;
+      nightMin += CORE.nightOverlapMin(a.inTime, a.outTime);
+      if (isSunday(a.date)) holidayMin += wm;
+      weekMin[CORE.weekKey(a.date)] = (weekMin[CORE.weekKey(a.date)] || 0) + wm;
+      details.push({ date: a.date, s: a.inTime, e: a.outTime, min: wm, label: "출퇴근 체크" });
+    }
+    details.sort((x, y) => x.date.localeCompare(y.date));
+    const lateN = rows.filter(a => a.status.startsWith("지각")).length;
+    return { workDays: rows.length, otMin, lateN, totalMin, nightMin, holidayMin, juhyuMin: juhyuFromWeeks(weekMin), details };
+  }
+  const overtimePay = (salaryBase, otMin) => floor10(salaryBase / Number(CFG.pay.monthHours) * Number(CFG.pay.otMult) * (otMin / 60));
+
+  async function runMonthlyPayroll(ym, { allowance = 200000, actor = null } = {}) {
+    const users = await DB.all("users");
+    const existing = await DB.all("payroll");
+    const results = [];
+    const useSchedule = CFG.payBasis === "schedule";
+    for (const u of users) {
+      if (existing.find(p => p.userId === u.id && p.ym === ym && (p.kind || "salary") === "salary")) {
+        results.push({ userId: u.id, name: u.name, skipped: true }); continue;
+      }
+      const att = useSchedule ? await monthSchedule(u.id, ym) : await monthAttendance(u.id, ym);
+      // 사용자 정의 급여 항목 (관리자 설정)
+      const empT = u.empType || "regular";
+      const itms = (CFG.payItems || []).filter(it => it.target === "all" || it.target === empT);
+      const aTax  = itms.filter(it => it.type === "수당(과세)").reduce((t, it) => t + Number(it.amount || 0), 0);
+      const aFree = itms.filter(it => it.type === "수당(비과세)").reduce((t, it) => t + Number(it.amount || 0), 0);
+      const iDed  = itms.filter(it => it.type === "공제").reduce((t, it) => t + Number(it.amount || 0), 0);
+      const itemNote = itms.map(it => `${it.name} ${it.type === "공제" ? "-" : "+"}${CORE.fmtMoney(it.amount)}`).join(", ");
+      let rec;
+      if ((u.empType || "regular") === "daily") {
+        const Dc = CFG.daily;
+        const otM = Dc.otOn === false ? 0 : att.otMin;
+        const ntM = Dc.nightOn === false ? 0 : (att.nightMin || 0);
+        const jhM = Dc.juhyuOn === false ? 0 : (att.juhyuMin || 0);
+        const hdM = Dc.holidayOn === false ? 0 : (att.holidayMin || 0);
+        const insure = Dc.autoInsure !== false && att.workDays >= Number(Dc.insureMinDays ?? 8);
+        const calc = CORE.calcDailyPayroll({ dailyWage: u.dailyWage || 0, days: att.workDays, otMin: otM,
+          nightMin: ntM, juhyuMin: jhM, holidayMin: hdM, insure, rates: payRates(),
+          otMult: Number(CFG.pay.otMult), taxFreeDaily: Number(Dc.taxFree), employRate: Dc.employPct / 100 });
+        const gross = calc.gross + aTax + aFree;
+        const totalDeduct = calc.totalDeduct + iDed;
+        rec = { kind: "salary", empType: "daily", userId: u.id, userName: u.name, ym,
+          base: (u.dailyWage || 0) * att.workDays, dailyWage: u.dailyWage || 0, allowance: 0, overtime: calc.otPay,
+          nightMin: ntM, nightPay: calc.nightPay, juhyuMin: jhM, juhyuPay: calc.juhyuPay,
+          holidayMin: hdM, holidayPay: calc.holidayPay, insured: insure,
+          details: att.details || [],
+          itemAllow: aTax + aFree, itemDeduct: iDed, itemNote,
+          otMin: otM, lateN: att.lateN, workDays: att.workDays, basis: useSchedule ? "schedule" : "attendance",
+          gross, pension: calc.pension, health: calc.health, care: calc.care, employ: calc.employ,
+          incomeTax: calc.incomeTax, localTax: calc.localTax, totalDeduct, net: gross - totalDeduct };
+      } else {
+        const overtime = overtimePay(u.salaryBase, att.otMin);
+        const calc = CORE.calcPayroll({ base: u.salaryBase, allowance: allowance + aTax + aFree, overtime,
+          mealTaxFree: Number(CFG.pay.mealTaxFree) + aFree, rates: payRates() });
+        calc.totalDeduct += iDed; calc.net -= iDed;
+        rec = { kind: "salary", empType: "regular", userId: u.id, userName: u.name, ym,
+          base: u.salaryBase, allowance, overtime, itemAllow: aTax + aFree, itemDeduct: iDed, itemNote,
+          otMin: att.otMin, lateN: att.lateN, workDays: att.workDays, basis: useSchedule ? "schedule" : "attendance", ...calc };
+      }
+      await DB.add("payroll", { ...rec, issued: true, issuedAt: new Date().toISOString(), createdAt: new Date().toISOString() });
+      await notify(u.id, `💰 ${ym} 급여명세서가 발급되었습니다`, "pay");
+      results.push({ userId: u.id, name: u.name, empType: rec.empType, otMin: att.otMin, overtime: rec.overtime, net: rec.net });
+    }
+    await log(actor, "급여일괄계산", `${ym} · ${results.filter(r => !r.skipped).length}건 발급`);
+    return results;
+  }
+  async function grantBonus(ym, entries, { label = "성과급", actor = null } = {}) {
+    const existing = await DB.all("payroll");
+    const results = [];
+    for (const { userId, amount } of entries) {
+      const u = await DB.get("users", userId);
+      if (!u || !(amount > 0)) continue;
+      if (existing.find(p => p.userId === userId && p.ym === ym && p.kind === "bonus")) {
+        results.push({ userId, skipped: true }); continue;
+      }
+      const calc = CORE.calcPayroll({ base: amount, allowance: 0, overtime: 0, mealTaxFree: 0 });
+      await DB.add("payroll", {
+        kind: "bonus", label, userId, userName: u.name, ym, base: amount, allowance: 0, overtime: 0,
+        ...calc, issued: true, issuedAt: new Date().toISOString(), createdAt: new Date().toISOString(),
+      });
+      await notify(userId, `🎁 ${ym} ${label} 명세서가 발급되었습니다`, "pay");
+      results.push({ userId, name: u.name, net: calc.net });
+    }
+    await log(actor, "성과급지급", `${ym} · ${results.filter(r => !r.skipped).length}건`);
+    return results;
+  }
+
+  /* ── 감사 리포트 ── */
+  async function buildAudit(ymFrom, ymTo) {
+    const inRange = ym => ym >= ymFrom && ym <= ymTo;
+    const docs = (await DB.all("docs")).filter(d => inRange(d.createdAt.slice(0, 7)));
+    const atts = (await DB.all("attendance")).filter(a => inRange(a.date.slice(0, 7)));
+    const pays = (await DB.all("payroll")).filter(p => inRange(p.ym));
+    const violations = [];
+
+    const done = docs.filter(d => d.status === "완료");
+    const avgDays = done.length ? done.reduce((t, d) => t + Math.max(0, (new Date(d.completedAt) - new Date(d.createdAt)) / 86400000), 0) / done.length : 0;
+    for (const d of docs) {
+      if (d.status === "완료" && !d.line.every(x => x.status === "승인")) violations.push(`문서#${d.docId} 완료 상태이나 미승인 단계 존재`);
+      if (d.status === "반려" && !d.line.some(x => x.status === "반려")) violations.push(`문서#${d.docId} 반려 상태이나 반려 단계 없음`);
+      if (d.status === "진행" && !d.line.some(x => x.status === "대기")) violations.push(`문서#${d.docId} 진행 상태이나 대기 단계 없음`);
+    }
+    const seen = new Set();
+    for (const p of pays) {
+      if (p.net !== p.gross - p.totalDeduct) violations.push(`급여#${p.payId} 실수령 산식 불일치`);
+      const key = `${p.userId}|${p.ym}|${p.kind || "salary"}`;
+      if (seen.has(key)) violations.push(`급여 중복 등록: ${key}`);
+      seen.add(key);
+    }
+    const lateN = atts.filter(a => a.status.startsWith("지각")).length;
+    const pendingDocs = docs.filter(d => d.status === "진행");
+    const stalePending = pendingDocs.filter(d => (new Date() - new Date(d.createdAt)) / 86400000 > 3).length;
+    return {
+      period: `${ymFrom} ~ ${ymTo}`,
+      docs: { total: docs.length, done: done.length, rejected: docs.filter(d => d.status === "반려").length,
+              recalled: docs.filter(d => d.status === "회수").length,
+              pending: pendingDocs.length, stalePending,
+              avgApprovalDays: Math.round(avgDays * 10) / 10 },
+      attendance: { records: atts.length, lateN,
+                    lateRate: atts.length ? Math.round(lateN / atts.length * 1000) / 10 : 0,
+                    totalHours: Math.round(atts.reduce((t, a) => t + (a.workMin || 0), 0) / 60) },
+      payroll: { count: pays.length,
+                 gross: pays.reduce((t, p) => t + p.gross, 0),
+                 deduct: pays.reduce((t, p) => t + p.totalDeduct, 0),
+                 net: pays.reduce((t, p) => t + p.net, 0),
+                 bonusCount: pays.filter(p => p.kind === "bonus").length,
+                 issued: pays.filter(p => p.issued).length },
+      violations,
+    };
+  }
+
+  /* ── 관리자: 근태 수정/추가/삭제 ── */
+  async function upsertAttendance({ attId = null, userId, date, inTime, outTime }, actor) {
+    const u = await DB.get("users", userId);
+    if (!u || !date || !inTime) return { ok: false, msg: "사원·날짜·출근시각은 필수입니다." };
+    const all = await DB.all("attendance");
+    const dup = all.find(a => a.userId === userId && a.date === date && a.attId !== attId);
+    if (dup) return { ok: false, msg: "해당 일자 기록이 이미 있습니다." };
+    const j = CORE.judgeAttendance(inTime, outTime || null, workPol());
+    const rec = { userId, userName: u.name, date, inTime, outTime: outTime || null, workMin: j.workMin, status: j.status };
+    if (attId != null) { rec.attId = attId; await DB.put("attendance", rec); }
+    else await DB.add("attendance", rec);
+    await log(actor, attId != null ? "근태수정" : "근태추가", `${u.name} ${date} ${inTime}~${outTime || "-"}`);
+    return { ok: true, status: j.status };
+  }
+  async function deleteAttendance(attId, actor) {
+    const a = await DB.get("attendance", attId);
+    await DB.del("attendance", attId);
+    await log(actor, "근태삭제", a ? `${a.userName} ${a.date}` : `#${attId}`);
+    return { ok: true };
+  }
+
+  /* ── 관리자: 결재문서 수정/삭제 ── */
+  async function editDoc(docId, { title, body }, actor) {
+    const d = await DB.get("docs", docId);
+    if (!d) return { ok: false, msg: "문서를 찾을 수 없습니다." };
+    if (title) d.title = title;
+    if (body != null) d.body = body;
+    d.editedAt = new Date().toISOString(); d.editedBy = actor?.name;
+    await DB.put("docs", d);
+    await log(actor, "문서수정", `#${docId} ${d.title}`);
+    return { ok: true };
+  }
+  async function deleteDoc(docId, actor) {
+    const d = await DB.get("docs", docId);
+    await DB.del("docs", docId);
+    await log(actor, "문서삭제", d ? `#${docId} [${d.type}] ${d.title}` : `#${docId}`);
+    return { ok: true };
+  }
+
+  /* ── 전자서명 등록 및 명세서 2단계 확인 ── */
+  async function setSignature(user, sign) {
+    if (!sign) return { ok: false, msg: "서명이 비어 있습니다." };
+    const u = await DB.get("users", user.id);
+    u.signature = sign;
+    await DB.put("users", u);
+    await log(user, "서명등록");
+    return { ok: true };
+  }
+  async function confirmSlip(payId, step, actor) {   // step: 'work' | 'final'
+    const p = await DB.get("payroll", payId);
+    if (!p) return { ok: false, msg: "명세서를 찾을 수 없습니다." };
+    if (p.userId !== actor.id) return { ok: false, msg: "본인 명세서만 확인할 수 있습니다." };
+    const u = await DB.get("users", actor.id);
+    if (!u.signature) return { ok: false, msg: "먼저 서명을 등록하세요." };
+    if (step === "work") {
+      if (p.workConfirmedAt) return { ok: false, msg: "이미 근무 확인이 완료되었습니다." };
+      p.workSign = u.signature; p.workConfirmedAt = new Date().toISOString();
+    } else if (step === "final") {
+      if (!p.workConfirmedAt) return { ok: false, msg: "근무 확인을 먼저 진행하세요." };
+      if (p.finalConfirmedAt) return { ok: false, msg: "이미 최종 확인이 완료되었습니다." };
+      p.finalSign = u.signature; p.finalConfirmedAt = new Date().toISOString();
+    } else return { ok: false, msg: "알 수 없는 단계입니다." };
+    await DB.put("payroll", p);
+    await log(actor, step === "work" ? "근무확인서명" : "급여최종확인", `${p.ym} ${p.userName}`);
+    return { ok: true };
+  }
+
+  /* ── 공연 엑셀/CSV 일괄 등록 ── */
+  async function bulkAddEvents(rows, actor) {
+    if (actor.role !== "admin") return { ok: false, msg: "관리자 전용 기능입니다." };
+    let added = 0; const errors = [];
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r.date || !/^\d{4}-\d{2}-\d{2}$/.test(String(r.date).trim())) { errors.push(`${i + 2}행: 날짜 형식(YYYY-MM-DD) 오류`); continue; }
+      const res = await addEvent({ date: String(r.date).trim(), title: r.title || "", venue: r.venue || "", perfTime: r.perfTime || "",
+        houseOpen: r.houseOpen || "", workStart: r.workStart || "", workEnd: r.workEnd || "", note: r.note || "" }, actor);
+      if (res.ok) added++; else errors.push(`${i + 2}행: ${res.msg}`);
+    }
+    await log(actor, "공연일괄등록", `${added}건 성공, ${errors.length}건 실패`);
+    return { ok: true, added, errors };
+  }
+
+  /* ── 셀프 회원가입 (급여 지급·신고 필수정보) → 관리자 승인 ── */
+  async function signUp(form) {
+    const req = ["name", "pwHash", "rrn", "phone", "bank", "account"];
+    for (const k of req) if (!form[k]) return { ok: false, msg: "급여 지급·신고에 필요한 필수 정보를 모두 입력하세요." };
+    if (!/^\d{6}-?\d{7}$/.test(form.rrn)) return { ok: false, msg: "주민등록번호 형식을 확인하세요 (000000-0000000)." };
+    const dup = (await DB.all("users")).find(x => x.status === "pending" && x.rrn === form.rrn);
+    if (dup) return { ok: false, msg: "이미 접수된 가입 신청이 있습니다. 관리자 승인을 기다려주세요." };
+    const tempId = "P" + Date.now();   // 사번은 관리자 승인 시 발급
+    const u = { ...form, id: tempId, role: "user", status: "pending", empType: form.empType || "regular",
+      salaryBase: 0, dailyWage: 0, annualLeave: 0, appliedAt: new Date().toISOString() };
+    await DB.put("users", u);
+    await log(u, "가입신청", `${u.name} (${u.dept || "-"})`);
+    const admins = (await DB.all("users")).filter(x => x.role === "admin" && x.status !== "pending");
+    await notify(admins.map(a => a.id), `👤 가입 승인 요청: ${u.name} (${u.dept || "-"} ${u.position || ""})`, "admin");
+    return { ok: true, tempId };
+  }
+  /* 승인: 관리자가 사번 발급 + 급여 조건 지정 / 거절: 신청 삭제 */
+  async function approveUser(tempId, approve, actor, opts = {}) {
+    const u = await DB.get("users", tempId);
+    if (!u || u.status !== "pending") return { ok: false, msg: "승인 대기 사원이 아닙니다." };
+    if (!approve) {
+      await DB.del("users", tempId);
+      await log(actor, "가입거절", `${u.name}`);
+      return { ok: true };
+    }
+    const newId = String(opts.newId || "").trim();
+    if (!newId) return { ok: false, msg: "발급할 사번을 입력하세요." };
+    if (await DB.get("users", newId)) return { ok: false, msg: "이미 사용 중인 사번입니다." };
+    const fin = { ...u, id: newId, status: "active",
+      salaryBase: Number(opts.salaryBase) || 0, dailyWage: Number(opts.dailyWage) || 0,
+      annualLeave: u.empType === "daily" ? 0 : (Number(opts.annualLeave) || 15),
+      joinDate: CORE.dateStr(new Date()), approvedBy: actor.name, approvedAt: new Date().toISOString() };
+    await DB.put("users", fin);
+    await DB.del("users", tempId);
+    await notify(newId, `🎉 가입 승인 완료! 사번 ${newId}로 로그인하세요.`, "home");
+    await log(actor, "가입승인", `${fin.name} → 사번 ${newId} 발급`);
+    return { ok: true, newId };
+  }
+  async function nextEmpId() {
+    const ids = (await DB.all("users")).map(x => parseInt(x.id, 10)).filter(n => !isNaN(n));
+    return String(ids.length ? Math.max(...ids) + 1 : 1001);
+  }
+
+  return { clockIn, clockOut, checkAttendIp, getClientIp, submitDoc, actOnDoc, recallDoc, leaveStatus, signUp, approveUser, notify,
+           setSignature, confirmSlip, bulkAddEvents, nextEmpId,
+           addEvent, updateEvent, deleteEvent, requestShift, updateShift, deleteShift, monthSchedule, monthAttendance, overtimePay,
+           runMonthlyPayroll, grantBonus, buildAudit, log, stdDayMin,
+           upsertAttendance, deleteAttendance, editDoc, deleteDoc };
+})();
+globalThis.SVC = SVC;
+</script>
+
+<!-- ══════════ 앱 로직 ══════════ -->
+<script id="appLogic">
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const F = CORE.fmtMoney;
+/* 휴가 meta → 연차 차감일수 (연차 1일, 반차 0.5일, 시간차 h/8일 · 병가/경조사 0) */
+function leaveDaysOf(meta) {
+  if (!meta || !meta.kind) return 0;
+  const days = Math.max(1, Math.round((new Date(meta.to || meta.from) - new Date(meta.from)) / 86400000) + 1);
+  if (meta.kind.startsWith("연차")) return days;
+  if (meta.kind.startsWith("반차")) return 0.5 * days;
+  if (meta.kind.startsWith("시간차")) return Math.round((meta.hours || 0) / 8 * 100) / 100;
+  return 0;
+}
+globalThis.leaveDaysOf = leaveDaysOf;
+let ME = null;               // 로그인 사용자
+let USERS = [];              // 사용자 캐시
+
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function openModal(html) {
+  $("#modalRoot").innerHTML = `<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  $("#modalBg").addEventListener("click", e => { if (e.target.id === "modalBg") closeModal(); });
+}
+function closeModal() { $("#modalRoot").innerHTML = ""; }
+const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")} ${CORE.timeStr(d)}`; };
+const statusPill = s => s === "완료" || s === "승인" ? `<span class="pill ok">${s}</span>`
+  : s === "반려" ? `<span class="pill no">${s}</span>`
+  : s === "진행" ? `<span class="pill ing">진행중</span>`
+  : s === "회수" ? `<span class="pill" style="background:#EEF0F3;color:#7A828E">회수</span>`
+  : `<span class="pill wait">${esc(s)}</span>`;
+
+/* ── 인증 ── */
+async function doLogin() {
+  const id = $("#loginId").value.trim(), pw = $("#loginPw").value;
+  const err = $("#loginErr");
+  err.classList.add("hidden");
+  if (!id || !pw) { err.textContent = "사번과 비밀번호를 입력하세요."; err.classList.remove("hidden"); return; }
+  const u = await DB.get("users", id);
+  if (!u || u.pwHash !== await sha256(pw)) {
+    err.textContent = "사번 또는 비밀번호가 올바르지 않습니다."; err.classList.remove("hidden"); return;
+  }
+  if (u.status === "pending") {
+    err.textContent = "가입 승인 대기 중입니다. 관리자 승인 후 로그인할 수 있습니다."; err.classList.remove("hidden"); return;
+  }
+  ME = u;
+  SVC.log(u, "로그인");
+  sessionStorage.setItem("gw_uid", u.id);
+  await enterApp();
+}
+async function enterApp() {
+  USERS = await DB.all("users");
+  $("#loginView").classList.add("hidden");
+  $("#appView").classList.remove("hidden");
+  $("#topName").textContent = `${ME.name} ${ME.position}`;
+  $("#topAvatar").textContent = ME.name[0];
+  $("#navAdmin").classList.toggle("hidden", ME.role !== "admin");
+  $("#modeBadge").textContent = DB === RemoteDB ? "🌐 서버" : "💾 로컬";
+  go("home");
+}
+function doLogout() {
+  sessionStorage.removeItem("gw_uid");
+  ME = null;
+  $("#appView").classList.add("hidden");
+  $("#loginView").classList.remove("hidden");
+  $("#loginPw").value = "";
+}
+
+/* ── 회원가입 ── */
+function openSignup() {
+  const sd = CFG.signup || {};
+  const selOrInput = (id, list, ph) => (list && list.length)
+    ? `<select id="${id}">${list.map(v => `<option>${esc(v)}</option>`).join("")}</select>`
+    : `<input id="${id}" placeholder="${ph}">`;
+  openModal(`
+    <h3>회원가입</h3>
+    <div style="font-size:12.5px;color:var(--sub);margin-top:4px">급여 지급 및 4대보험·세무 신고에 필요한 정보입니다.<br><b>사번은 관리자 승인 시 발급됩니다.</b></div>
+    ${sd.notice ? `<div style="font-size:12.5px;background:var(--navy-t);color:var(--navy);border-radius:8px;padding:9px 11px;margin-top:8px;white-space:pre-wrap">${esc(sd.notice)}</div>` : ""}
+    <label>이름 *</label><input id="suName">
+    <div class="row2">
+      <div><label>비밀번호 *</label><input id="suPw" type="password"></div>
+      <div><label>비밀번호 확인 *</label><input id="suPw2" type="password"></div>
+    </div>
+    <div class="row2">
+      <div><label>부서(팀) *</label>${selOrInput("suDept", sd.depts, "예: 하우스팀")}</div>
+      <div><label>직급 *</label>${selOrInput("suPos", sd.positions, "예: 어셔")}</div>
+    </div>
+    <label>고용형태</label>
+    <select id="suType"><option value="daily">일용직(일당)</option><option value="regular">정규직(월급)</option></select>
+    <label>주민등록번호 * <span style="font-weight:400">(원천징수·4대보험 신고용)</span></label>
+    <input id="suRrn" placeholder="000000-0000000" inputmode="numeric">
+    <label>연락처 *</label><input id="suPhone" placeholder="010-0000-0000" inputmode="tel">
+    <label>이메일</label><input id="suEmail" type="email" placeholder="선택">
+    <div class="row2">
+      <div><label>급여 입금 은행 *</label><input id="suBank" placeholder="예: 국민은행"></div>
+      <div><label>계좌번호 *</label><input id="suAcct" inputmode="numeric"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn ghost" id="suCancel">취소</button>
+      <button class="btn" id="suSubmit">가입 신청</button>
+    </div>`);
+  $("#suCancel").onclick = closeModal;
+  $("#suSubmit").onclick = async () => {
+    if (!$("#suPw").value || $("#suPw").value !== $("#suPw2").value) return toast("비밀번호가 일치하지 않습니다");
+    const r = await SVC.signUp({
+      name: $("#suName").value.trim(), pwHash: await sha256($("#suPw").value),
+      dept: $("#suDept").value.trim(), position: $("#suPos").value.trim(), empType: $("#suType").value,
+      rrn: $("#suRrn").value.trim(), phone: $("#suPhone").value.trim(), email: $("#suEmail").value.trim(),
+      bank: $("#suBank").value.trim(), account: $("#suAcct").value.trim(),
+    });
+    if (!r.ok) return toast(r.msg);
+    closeModal();
+    toast("가입 신청 완료! 관리자 승인 후 발급된 사번으로 로그인하세요.");
+  };
+}
+
+/* ── 라우팅 ── */
+const TITLES = { home: "홈", approval: "전자결재", schedule: "근무 스케줄", board: "게시판", attend: "근태관리", pay: "급여", admin: "관리자" };
+async function go(view, param) {
+  $$(".nav-item[data-view],.tab[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+  $$("section[id^=view-]").forEach(s => s.classList.add("hidden"));
+  $(`#view-${view}`).classList.remove("hidden");
+  $("#topTitle").textContent = TITLES[view] || "";
+  window.scrollTo(0, 0);
+  if (view === "home") await renderHome();
+  if (view === "approval") await renderApproval(param);
+  if (view === "schedule") await renderSchedule();
+  if (view === "board") await renderBoard(param);
+  if (view === "attend") await renderAttend();
+  if (view === "pay") await renderPay();
+  if (view === "admin") await renderAdmin();
+  await refreshBadge();
+}
+async function refreshBadge() {
+  const docs = await DB.all("docs");
+  const n = docs.filter(d => CORE.myTurn(d, ME.id)).length;
+  $("#badgeAppr").textContent = n;
+  $("#badgeAppr").classList.toggle("hidden", n === 0);
+  $("#tabDotAppr").classList.toggle("hidden", n === 0);
+  const un = (await DB.all("notify")).filter(x => x.userId === ME.id && !x.read).length;
+  $("#bellBadge").textContent = un > 99 ? "99+" : un;
+  $("#bellBadge").classList.toggle("hidden", un === 0);
+}
+async function openNotify() {
+  const list = (await DB.all("notify")).filter(x => x.userId === ME.id).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 40);
+  openModal(`
+    <div class="card-head"><h3>🔔 알림</h3>${list.some(x => !x.read) ? `<button class="btn small ghost" id="ntAll">모두 읽음</button>` : ""}</div>
+    ${list.length ? list.map(x => `
+      <button class="list-row" data-nt="${x.nid}" data-view="${esc(x.view)}" style="${x.read ? "opacity:.55" : ""}">
+        <div class="grow"><div class="t" style="font-weight:${x.read ? 500 : 700}">${esc(x.text)}</div><div class="s">${fmtDate(x.ts)}</div></div>
+        ${x.read ? "" : `<span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--stamp);flex:none"></span>`}
+      </button>`).join("") : `<div class="empty">알림이 없습니다.</div>`}
+    <button class="btn ghost" id="ntClose" style="margin-top:10px">닫기</button>`);
+  $("#ntClose").onclick = closeModal;
+  const all = $("#ntAll");
+  if (all) all.onclick = async () => {
+    for (const x of list.filter(y => !y.read)) { x.read = true; await DB.put("notify", x); }
+    closeModal(); refreshBadge(); toast("모두 읽음 처리했습니다");
+  };
+  $("#modalRoot").querySelectorAll("[data-nt]").forEach(b => b.onclick = async () => {
+    const x = await DB.get("notify", Number(b.dataset.nt));
+    if (x && !x.read) { x.read = true; await DB.put("notify", x); }
+    closeModal(); go(b.dataset.view || "home");
+  });
+}
+
+/* ── 홈 ── */
+async function renderHome() {
+  const [docs, posts, atts] = await Promise.all([DB.all("docs"), DB.all("posts"), DB.all("attendance")]);
+  const today = CORE.dateStr(new Date());
+  const myAtt = atts.find(a => a.userId === ME.id && a.date === today);
+  const waitN = docs.filter(d => CORE.myTurn(d, ME.id)).length;
+  const myIngN = docs.filter(d => d.drafterId === ME.id && d.status === "진행").length;
+  const notices = posts.filter(p => p.board === "notice").sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
+  const attState = !myAtt ? "출근 전" : myAtt.outTime ? `퇴근 완료 (${myAtt.inTime}~${myAtt.outTime})` : `근무중 · ${myAtt.inTime} 출근`;
+
+  $("#view-home").innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="k">결재 대기</div><div class="v">${waitN}<small>건</small></div></div>
+      <div class="stat"><div class="k">내 상신 진행중</div><div class="v">${myIngN}<small>건</small></div></div>
+      <div class="stat"><div class="k">오늘 근태</div><div class="v" style="font-size:15px;padding-top:6px">${esc(attState)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>빠른 작업</h3></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn small" data-go="approval" data-p="write">🖋️ 기안 작성</button>
+        <button class="btn small ghost" data-go="attend">⏰ 출퇴근 체크</button>
+        <button class="btn small ghost" data-go="approval" data-p="req">🏖️ 휴가/근무 신청</button>
+        ${ME.role === "admin" ? `<button class="btn small ghost" data-go="admin">⚙️ 사원·급여 관리</button>` : ""}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>📢 공지사항</h3><button class="more" data-go="board">더보기 ›</button></div>
+      ${notices.length ? notices.map(p => `
+        <button class="list-row" data-post="${p.postId}">
+          <div class="grow"><div class="t">${esc(p.title)}</div><div class="s">${esc(p.authorName)} · ${fmtDate(p.createdAt)}</div></div>
+        </button>`).join("") : `<div class="empty">등록된 공지가 없습니다.</div>`}
+    </div>`;
+  $("#view-home").querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go, b.dataset.p));
+  $("#view-home").querySelectorAll("[data-post]").forEach(b => b.onclick = () => go("board", { open: Number(b.dataset.post) }));
+}
+
+/* ── 전자결재 ── */
+const DOC_TYPES = () => (CFG.docTypes || []).map(t => t.name);
+const docTemplate = name => (CFG.docTypes || []).find(t => t.name === name)?.template || "";
+let apprTab = "todo";
+async function renderApproval(param) {
+  if (param === "write") { renderApprList(); openDocWrite(); return; }
+  if (param === "req") { renderApprList(); openDocWrite("휴가신청"); return; }
+  if (param && param.open) { renderApprList().then(() => openDocDetail(param.open)); return; }
+  await renderApprList();
+}
+async function renderApprList() {
+  const docs = (await DB.all("docs")).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const lists = {
+    todo: docs.filter(d => CORE.myTurn(d, ME.id)),
+    mine: docs.filter(d => d.drafterId === ME.id),
+    done: docs.filter(d => d.line.some(s => s.userId === ME.id && s.status !== "대기")),
+    all:  ME.role === "admin" ? docs : null,
+  };
+  const cur = lists[apprTab] || [];
+  $("#view-approval").innerHTML = `
+    <div class="toolbar">
+      <div class="seg" style="margin:0;flex:1">
+        <button data-t="todo" class="${apprTab === "todo" ? "active" : ""}">결재대기 ${lists.todo.length ? `(${lists.todo.length})` : ""}</button>
+        <button data-t="mine" class="${apprTab === "mine" ? "active" : ""}">기안함</button>
+        <button data-t="done" class="${apprTab === "done" ? "active" : ""}">결재이력</button>
+        ${ME.role === "admin" ? `<button data-t="all" class="${apprTab === "all" ? "active" : ""}">전체</button>` : ""}
+      </div>
+      <button class="btn small" id="btnDocWrite">＋ 기안</button>
+    </div>
+    <div class="card" style="padding:6px 14px">
+      ${cur.length ? cur.map(d => `
+        <button class="list-row" data-doc="${d.docId}">
+          <div class="grow">
+            <div class="t">[${esc(d.type)}] ${esc(d.title)}</div>
+            <div class="s">${d.docNo ? esc(d.docNo) + " · " : ""}${esc(d.drafterName)} ${esc(d.drafterPos || "")} · ${fmtDate(d.createdAt)}</div>
+          </div>
+          ${statusPill(d.status)}
+        </button>`).join("") : `<div class="empty">문서가 없습니다.</div>`}
+    </div>`;
+  $("#view-approval").querySelectorAll(".seg button").forEach(b => b.onclick = () => { apprTab = b.dataset.t; renderApprList(); });
+  $("#btnDocWrite").onclick = () => openDocWrite();
+  $("#view-approval").querySelectorAll("[data-doc]").forEach(b => b.onclick = () => openDocDetail(Number(b.dataset.doc)));
+}
+
+async function openDocWrite(presetType) {
+  let line = [];
+  const others = USERS.filter(u => u.id !== ME.id);
+  const savedRow = await DB.get("settings", `lines_${ME.id}`).catch(() => null);
+  const savedLines = (savedRow && savedRow.value) || [];
+  const leave = await SVC.leaveStatus(ME.id);
+  openModal(`
+    <h3>기안 작성</h3>
+    <label>문서 종류</label>
+    <select id="dwType">${DOC_TYPES().map(t => `<option ${t === presetType ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>
+    <div id="dwLeave" class="hidden" style="font-size:12.5px;color:var(--navy);background:var(--navy-t);border-radius:8px;padding:8px 10px;margin-top:8px">
+      내 연차: 부여 ${leave.granted}일 · 사용 ${leave.used}일 · <b>잔여 ${leave.remain}일</b> (사용률 ${leave.rate}%)</div>
+    <div id="dwExtra"></div>
+    <label>제목</label><input id="dwTitle" placeholder="문서 제목">
+    <label>내용</label><textarea id="dwBody" rows="5" placeholder="기안 내용을 입력하세요"></textarea>
+    <label>결재선 (순서대로 추가)</label>
+    ${savedLines.length ? `<select id="dwSaved" style="margin-bottom:6px"><option value="">💾 저장된 결재선 불러오기…</option>${savedLines.map((l, i) => `<option value="${i}">${esc(l.name)} (${l.userIds.length}단계)</option>`).join("")}</select>` : ""}
+    <select id="dwPick"><option value="">결재자 선택…</option>${others.map(u => `<option value="${u.id}">${esc(u.name)} ${esc(u.position)} · ${esc(u.dept)}</option>`).join("")}</select>
+    <div class="appr-picked" id="dwLine"></div>
+    <button class="btn small ghost" id="dwSaveLine" style="margin-top:8px">현재 결재선 저장</button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn ghost" id="dwCancel">취소</button>
+      <button class="btn" id="dwSubmit">상신</button>
+    </div>`);
+  let lastTpl = null;
+  const extra = () => {
+    const t = $("#dwType").value;
+    $("#dwLeave").classList.toggle("hidden", !t.includes("휴가"));
+    // 기본 양식 자동 삽입 (직접 수정 전까지 종류 변경 시 갱신)
+    const body = $("#dwBody");
+    if (!body.value.trim() || body.value === lastTpl) { body.value = docTemplate(t); lastTpl = body.value; }
+    $("#dwExtra").innerHTML = (t.includes("휴가") || t.includes("근무")) ? `
+      <div class="row2">
+        <div><label>시작일</label><input type="date" id="dwFrom" value="${CORE.dateStr(new Date())}"></div>
+        <div><label>종료일</label><input type="date" id="dwTo" value="${CORE.dateStr(new Date())}"></div>
+      </div>
+      <label>구분</label>
+      <select id="dwKind">${(t.includes("휴가") ? ["연차(종일)", "반차(0.5일)", "시간차(시간단위)", "병가", "경조사"] : ["초과근무", "휴일근무", "재택근무", "외근"]).map(k => `<option>${k}</option>`).join("")}</select>
+      <div id="dwTimeWrap" class="hidden">
+        <div class="row2">
+          <div><label>시작 시각</label><input type="time" id="dwStime" value="${t.includes("휴가") ? "14:00" : esc(CFG.work.end)}"></div>
+          <div><label>종료 시각</label><input type="time" id="dwEtime" value="${t.includes("휴가") ? "16:00" : "21:00"}"></div>
+        </div>
+        <div id="dwHours" style="font-size:12.5px;color:var(--navy);margin-top:4px"></div>
+      </div>` : "";
+    const kindSel = $("#dwKind");
+    if (kindSel) {
+      const syncTime = () => {
+        const k = kindSel.value;
+        const needTime = k.includes("시간차") || !t.includes("휴가") && (k === "초과근무" || k === "휴일근무");
+        $("#dwTimeWrap").classList.toggle("hidden", !needTime);
+        calcHours();
+      };
+      const calcHours = () => {
+        const st = $("#dwStime"), et = $("#dwEtime");
+        if (!st || $("#dwTimeWrap").classList.contains("hidden")) return;
+        const h = (CORE.toMin(et.value) - CORE.toMin(st.value)) / 60;
+        $("#dwHours").textContent = h > 0 ? `신청 시간: ${h}시간${t.includes("휴가") ? ` (연차 ${Math.round(h / 8 * 100) / 100}일 차감)` : ""}` : "종료 시각을 확인하세요";
+      };
+      kindSel.onchange = syncTime;
+      $("#dwStime").addEventListener("input", calcHours);
+      $("#dwEtime").addEventListener("input", calcHours);
+      syncTime();
+    }
+  };
+  extra();
+  $("#dwType").onchange = extra;
+  const drawLine = () => {
+    $("#dwLine").innerHTML = line.map((u, i) => `<span class="chip">${i + 1}. ${esc(u.name)} ${esc(u.position)}<button data-i="${i}" aria-label="제거">✕</button></span>`).join("") || `<span style="font-size:12.5px;color:var(--sub)">결재자를 1명 이상 선택하세요</span>`;
+    $("#dwLine").querySelectorAll("button").forEach(b => b.onclick = () => { line.splice(Number(b.dataset.i), 1); drawLine(); });
+  };
+  drawLine();
+  $("#dwPick").onchange = e => {
+    const u = USERS.find(x => x.id === e.target.value);
+    if (u && !line.some(l => l.id === u.id)) { line.push(u); drawLine(); }
+    e.target.value = "";
+  };
+  const savedSel = $("#dwSaved");
+  if (savedSel) savedSel.onchange = e => {
+    const l = savedLines[Number(e.target.value)];
+    if (!l) return;
+    line = l.userIds.map(id => USERS.find(u => u.id === id)).filter(Boolean);
+    drawLine(); e.target.value = "";
+    toast(`결재선 "${l.name}" 적용`);
+  };
+  $("#dwSaveLine").onclick = async () => {
+    if (!line.length) return toast("저장할 결재선이 없습니다");
+    const name = line.map(u => u.name).join("→");
+    const next = savedLines.filter(l => l.name !== name).concat([{ name, userIds: line.map(u => u.id) }]).slice(-5);
+    await DB.put("settings", { key: `lines_${ME.id}`, value: next });
+    toast(`결재선 "${name}" 저장 (다음 기안부터 표시)`);
+  };
+  $("#dwCancel").onclick = closeModal;
+  $("#dwSubmit").onclick = async () => {
+    const type = $("#dwType").value, title = $("#dwTitle").value.trim(), body = $("#dwBody").value.trim();
+    if (!title) return toast("제목을 입력하세요");
+    if (!line.length) return toast("결재자를 선택하세요");
+    const meta = {};
+    if ($("#dwFrom")) {
+      meta.from = $("#dwFrom").value; meta.to = $("#dwTo").value; meta.kind = $("#dwKind").value;
+      if ($("#dwTimeWrap") && !$("#dwTimeWrap").classList.contains("hidden")) {
+        meta.stime = $("#dwStime").value; meta.etime = $("#dwEtime").value;
+        meta.hours = Math.round((CORE.toMin(meta.etime) - CORE.toMin(meta.stime)) / 60 * 100) / 100;
+        if (!(meta.hours > 0)) return toast("종료 시각이 시작보다 빨라요");
+        if (type.includes("휴가") && meta.hours > 8) return toast("시간차는 하루 8시간 이내로 신청하세요");
+      }
+      // 연차 잔여 검증 (휴가 계열: 연차/반차/시간차만 차감 대상)
+      if (type.includes("휴가")) {
+        const lv = await SVC.leaveStatus(ME.id);
+        const req = leaveDaysOf(meta);
+        if (req > 0 && req > lv.remain) return toast(`잔여 연차(${lv.remain}일)를 초과합니다. 관리자에게 문의하세요.`);
+      }
+    }
+    const r = await SVC.submitDoc({ drafter: ME, type, title, body, meta, lineUsers: line });
+    if (!r.ok) return toast(r.msg);
+    closeModal(); toast("상신했습니다"); apprTab = "mine"; await renderApprList(); await refreshBadge();
+  };
+}
+
+async function openDocDetail(docId) {
+  const d = await DB.get("docs", docId);
+  if (!d) return toast("문서를 찾을 수 없습니다");
+  const metaHtml = d.meta && d.meta.from ? `<span>기간</span><b>${esc(d.meta.from)} ~ ${esc(d.meta.to)} (${esc(d.meta.kind)})${d.meta.stime ? ` · ${esc(d.meta.stime)}~${esc(d.meta.etime)} ${d.meta.hours}h` : ""}</b>` : "";
+  const canAct = CORE.myTurn(d, ME.id);
+  openModal(`
+    <div class="doc-sheet" style="border:none;box-shadow:none;padding:4px 0">
+      <div class="doc-title">[${esc(d.type)}] ${esc(d.title)}</div>
+      <div class="doc-meta">
+        ${d.docNo ? `<span>문서번호</span><b>${esc(d.docNo)}</b>` : ""}
+        <span>기안자</span><b>${esc(d.drafterName)} ${esc(d.drafterPos || "")} · ${esc(d.drafterDept || "")}</b>
+        <span>기안일</span><b>${fmtDate(d.createdAt)}</b>
+        ${metaHtml}
+        <span>상태</span><b>${statusPill(d.status)}</b>
+      </div>
+      <div class="doc-body">${esc(d.body) || "(내용 없음)"}</div>
+      <div class="appr-line">
+        <div class="appr-box"><div class="role">기안</div><div class="sign"><div class="stamp-mark">${esc(d.drafterName.slice(0, 3))}</div></div><div class="nm">${esc(d.drafterName)}</div></div>
+        ${d.line.map(s => `
+          <div class="appr-box"><div class="role">${esc(s.position)}</div>
+            <div class="sign">${s.status === "승인" ? `<div class="stamp-mark">${esc(s.name.slice(0, 3))}</div>`
+              : s.status === "반려" ? `<div class="stamp-mark reject">반려</div>`
+              : `<span class="appr-wait">대기</span>`}</div>
+            <div class="nm">${esc(s.name)}</div></div>`).join("")}
+      </div>
+      ${d.line.some(s => s.comment) ? `<div class="comment-log"><b>결재 의견</b>${d.line.filter(s => s.comment).map(s => `<div class="c"><b>${esc(s.name)}</b> · ${esc(s.comment)}</div>`).join("")}</div>` : ""}
+      ${canAct ? `
+        <label>결재 의견 (선택)</label><input id="ddComment" placeholder="의견 입력">
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn danger" id="ddReject">반려</button>
+          <button class="btn" id="ddApprove">승인</button>
+        </div>` : `
+        ${d.drafterId === ME.id && d.status === "진행" && d.line.every(x => x.status === "대기") ? `<button class="btn ghost" id="ddRecall" style="margin-top:14px;color:var(--stamp)">상신 회수</button>` : ""}
+        <button class="btn ghost" id="ddClose" style="margin-top:10px">닫기</button>`}
+    </div>`);
+  if (canAct) {
+    $("#ddApprove").onclick = () => actDoc(d, "approve");
+    $("#ddReject").onclick = () => actDoc(d, "reject");
+  } else {
+    $("#ddClose").onclick = closeModal;
+    const rc = $("#ddRecall");
+    if (rc) rc.onclick = async () => {
+      const r = await SVC.recallDoc(d.docId, ME);
+      if (!r.ok) return toast(r.msg);
+      closeModal(); toast("회수했습니다"); await renderApprList(); await refreshBadge();
+    };
+  }
+}
+async function actDoc(d, action) {
+  const r = await SVC.actOnDoc(d.docId, ME, action, $("#ddComment").value.trim());
+  if (!r.ok) return toast(r.msg);
+  closeModal();
+  toast(action === "approve" ? "승인 처리했습니다" : "반려 처리했습니다");
+  await renderApprList(); await refreshBadge();
+}
+</script>
+
+<!-- ══════════ 게시판 · 근태 · 급여 · 관리자 ══════════ -->
+<script id="appLogic2">
+"use strict";
+/* ── 근무 스케줄 (공연 일정 + 근무신청 공유 달력) ── */
+let schCursor = null;   // Date (해당 월 1일)
+async function renderSchedule() {
+  if (!schCursor) { const n = new Date(); schCursor = new Date(n.getFullYear(), n.getMonth(), 1); }
+  const y = schCursor.getFullYear(), m = schCursor.getMonth();
+  const ym = `${y}-${CORE.pad2(m + 1)}`;
+  const rows = (await DB.all("schedule")).filter(x => x.date && x.date.startsWith(ym));
+  const byDate = {};
+  for (const r of rows) (byDate[r.date] ||= []).push(r);
+  const first = new Date(y, m, 1), startDow = first.getDay(), dim = new Date(y, m + 1, 0).getDate();
+  const today = CORE.dateStr(new Date());
+  const myShifts = rows.filter(r => r.kind === "shift" && r.userId === ME.id);
+  const myFix = myShifts.filter(r => r.status === "확정").length;
+
+  let cells = "";
+  for (let i = 0; i < startDow; i++) cells += `<div class="day dim"></div>`;
+  for (let d = 1; d <= dim; d++) {
+    const ds = `${ym}-${CORE.pad2(d)}`;
+    const dow = (startDow + d - 1) % 7;
+    const list = (byDate[ds] || []);
+    const evs = list.filter(r => r.kind === "event");
+    const shs = list.filter(r => r.kind === "shift").sort((a, b) => a.startTime.localeCompare(b.startTime));
+    cells += `<button class="day ${dow === 0 ? "sun" : dow === 6 ? "sat" : ""} ${ds === today ? "today" : ""}" data-day="${ds}">
+      <span class="dn">${d}</span>
+      ${evs.slice(0, 2).map(e => `<span class="ev">🎭 ${esc(e.title)}${e.perfTime ? " " + esc(e.perfTime) : ""}</span>`).join("")}
+      ${shs.slice(0, 3).map(sh => `<span class="sh ${sh.status === "확정" ? "fix" : ""} ${sh.userId === ME.id ? "mine" : ""}">${esc(sh.userName)} ${sh.startTime}</span>`).join("")}
+      ${evs.length + shs.length > 5 ? `<span style="font-size:9px;color:var(--sub)">+${evs.length + shs.length - 5}</span>` : ""}
+    </button>`;
+  }
+  $("#view-schedule").innerHTML = `
+    <div class="cal-head">
+      <span class="ym">${y}. ${CORE.pad2(m + 1)}</span>
+      <div class="cal-nav">
+        ${ME.role === "admin" ? `<button id="schBulk">📤 엑셀 일괄</button>` : ""}
+        <button id="schPrev">‹</button><button id="schToday">오늘</button><button id="schNext">›</button>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="k">이달 내 근무 (확정/신청)</div><div class="v">${myFix}<small> / ${myShifts.length}건</small></div></div>
+      <div class="stat"><div class="k">이달 공연/특이사항</div><div class="v">${rows.filter(r => r.kind === "event").length}<small>건</small></div></div>
+      <div class="stat"><div class="k">전체 근무 신청</div><div class="v">${rows.filter(r => r.kind === "shift").length}<small>건</small></div></div>
+    </div>
+    <div class="cal">
+      ${["일", "월", "화", "수", "목", "금", "토"].map((n, i) => `<div class="dow ${i === 0 ? "sun" : i === 6 ? "sat" : ""}">${n}</div>`).join("")}
+      ${cells}
+    </div>
+    <div style="font-size:12px;color:var(--sub);margin-top:8px">🎭 공연/특이사항 · <span class="sh" style="vertical-align:1px">신청</span> <span class="sh fix" style="vertical-align:1px">확정</span> — 날짜를 눌러 일정 등록·근무 신청. 확정 근무는 급여 산정에 반영됩니다${CFG.payBasis === "schedule" ? " (현재 산정 기준: 근무스케줄)" : ""}.</div>`;
+  $("#schPrev").onclick = () => { schCursor = new Date(y, m - 1, 1); renderSchedule(); };
+  $("#schNext").onclick = () => { schCursor = new Date(y, m + 1, 1); renderSchedule(); };
+  $("#schToday").onclick = () => { schCursor = null; renderSchedule(); };
+  const bulk = $("#schBulk");
+  if (bulk) bulk.onclick = openBulkEvents;
+  $("#view-schedule").querySelectorAll("[data-day]").forEach(b => b.onclick = () => openDayModal(b.dataset.day));
+}
+
+async function openDayModal(ds) {
+  const rows = (await DB.all("schedule")).filter(x => x.date === ds);
+  const evs = rows.filter(r => r.kind === "event");
+  const shs = rows.filter(r => r.kind === "shift").sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const myShift = shs.find(x => x.userId === ME.id);
+  const isAdmin = ME.role === "admin";
+  const evWork = evs.filter(e => e.workStart && e.workEnd);   // 근무시간 등록된 공연만 신청 대상
+  openModal(`
+    <h3>🗓️ ${ds}</h3>
+    <div class="day-modal-list">
+      <div class="card-head" style="margin:10px 0 4px"><label style="margin:0">공연 / 특이사항</label>
+        ${isAdmin ? `<button class="btn small" id="dmEvNew">＋ 공연 등록</button>` : ""}</div>
+      ${evs.length ? evs.map(e => `
+        <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;background:#FBFAFF">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+            <b style="font-size:15px">🎭 ${esc(e.title)}</b>
+            <span style="flex:none">
+              ${isAdmin ? `<button class="btn small ghost" data-eedit="${e.schId}" style="padding:3px 8px">수정</button>
+              <button class="btn small danger" data-edel="${e.schId}" style="padding:3px 8px">삭제</button>` : ""}
+            </span>
+          </div>
+          <div style="font-size:13px;margin-top:6px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;color:var(--sub)">
+            ${e.venue ? `<span>장소</span><b style="color:var(--ink)">${esc(e.venue)}</b>` : ""}
+            ${e.perfTime ? `<span>공연 시간</span><b style="color:var(--ink)">${esc(e.perfTime)}</b>` : ""}
+            ${e.houseOpen ? `<span>객석 오픈</span><b style="color:var(--ink)">${esc(e.houseOpen)}</b>` : ""}
+            ${e.workStart ? `<span>근무시간</span><b style="color:var(--navy)">${esc(e.workStart)} ~ ${esc(e.workEnd)}</b>` : `<span>근무시간</span><b style="color:var(--sub)">미지정</b>`}
+            ${e.note ? `<span>특이사항</span><b style="color:var(--ink);white-space:pre-wrap">${esc(e.note)}</b>` : ""}
+          </div>
+        </div>`).join("") : `<div style="font-size:13px;color:var(--sub);padding:4px 0">등록된 일정이 없습니다.</div>`}
+
+      <label style="margin-top:16px">근무 신청 현황 (전체 공유)</label>
+      ${shs.length ? shs.map(sh => `
+        <div class="list-row">
+          <span class="avatar">${esc(sh.userName[0])}</span>
+          <div class="grow"><div class="t">${esc(sh.userName)} <span style="font-weight:600;color:var(--sub)">${sh.startTime}~${sh.endTime}</span></div>
+            <div class="s">${sh.eventTitle ? `🎭 ${esc(sh.eventTitle)} · ` : ""}${esc(sh.note || "")}</div></div>
+          ${sh.status === "확정" ? `<span class="pill ok">확정</span>` : `<span class="pill wait">신청</span>`}
+          ${isAdmin ? `
+            ${sh.status === "확정" ? `<button class="btn small ghost" data-unfix="${sh.schId}" style="padding:4px 8px">해제</button>` : `<button class="btn small" data-fix="${sh.schId}" style="padding:4px 8px">확정</button>`}
+            <button class="btn small ghost" data-sedit="${sh.schId}" style="padding:4px 8px">수정</button>
+            <button class="btn small danger" data-sdel="${sh.schId}" style="padding:4px 8px">삭제</button>`
+          : sh.userId === ME.id && sh.status !== "확정" ? `<button class="btn small danger" data-sdel="${sh.schId}" style="padding:4px 8px">취소</button>` : ""}
+        </div>`).join("") : `<div style="font-size:13px;color:var(--sub);padding:4px 0">근무 신청이 없습니다.</div>`}
+
+      ${!myShift ? `
+        <label style="margin-top:14px">내 근무 신청</label>
+        ${evWork.length ? `
+          <select id="dmEvt">${evWork.map(e => `<option value="${e.schId}">🎭 ${esc(e.title)} · 근무 ${e.workStart}~${e.workEnd}</option>`).join("")}<option value="">공연 외 근무 (직접 입력)</option></select>
+          <div style="font-size:12px;color:var(--navy);margin-top:4px" id="dmEvtHint">공연 근무시간은 관리자 등록 시간으로 고정됩니다.</div>` : ""}
+        <div class="row2" style="margin-top:8px">
+          <div><label style="margin-top:0">시작</label><input type="time" id="dmFrom" value="${evWork.length ? evWork[0].workStart : esc(CFG.work.start)}" ${evWork.length ? "disabled" : ""}></div>
+          <div><label style="margin-top:0">종료</label><input type="time" id="dmTo" value="${evWork.length ? evWork[0].workEnd : esc(CFG.work.end)}" ${evWork.length ? "disabled" : ""}></div>
+        </div>
+        <input id="dmNote" placeholder="메모 (예: 콘서트홀 하우스)" style="margin-top:8px">
+        <button class="btn" id="dmReq">이 날짜에 근무 신청</button>` : ""}
+      <button class="btn ghost" id="dmClose" style="margin-top:10px">닫기</button>
+    </div>`);
+  const reload = async () => { closeModal(); await renderSchedule(); openDayModal(ds); };
+  $("#dmClose").onclick = () => { closeModal(); renderSchedule(); };
+  const evNew = $("#dmEvNew");
+  if (evNew) evNew.onclick = () => openEventForm(ds);
+  $("#modalRoot").querySelectorAll("[data-eedit]").forEach(b => b.onclick = () => openEventForm(ds, Number(b.dataset.eedit)));
+  $("#modalRoot").querySelectorAll("[data-edel]").forEach(b => b.onclick = async () => {
+    const r = await SVC.deleteEvent(Number(b.dataset.edel), ME);
+    r.ok ? (toast("삭제했습니다"), reload()) : toast(r.msg);
+  });
+  const evtSel = $("#dmEvt");
+  if (evtSel) evtSel.onchange = async () => {
+    const manual = !evtSel.value;
+    $("#dmFrom").disabled = $("#dmTo").disabled = !manual;
+    $("#dmEvtHint").textContent = manual ? "공연 외 근무는 시간을 직접 입력합니다." : "공연 근무시간은 관리자 등록 시간으로 고정됩니다.";
+    if (!manual) {
+      const ev = await DB.get("schedule", Number(evtSel.value));
+      $("#dmFrom").value = ev.workStart; $("#dmTo").value = ev.workEnd;
+    }
+  };
+  const req = $("#dmReq");
+  if (req) req.onclick = async () => {
+    const eventId = evtSel && evtSel.value ? Number(evtSel.value) : null;
+    const r = await SVC.requestShift({ date: ds, startTime: $("#dmFrom").value, endTime: $("#dmTo").value, note: $("#dmNote").value.trim(), eventId }, ME);
+    if (!r.ok) return toast(r.msg);
+    toast("근무를 신청했습니다 (관리자 확정 대기)"); reload();
+  };
+  $("#modalRoot").querySelectorAll("[data-fix]").forEach(b => b.onclick = async () => {
+    const r = await SVC.updateShift(Number(b.dataset.fix), { status: "확정" }, ME);
+    r.ok ? (toast("확정했습니다"), reload()) : toast(r.msg);
+  });
+  $("#modalRoot").querySelectorAll("[data-unfix]").forEach(b => b.onclick = async () => {
+    const r = await SVC.updateShift(Number(b.dataset.unfix), { status: "신청" }, ME);
+    r.ok ? (toast("신청 상태로 되돌렸습니다"), reload()) : toast(r.msg);
+  });
+  $("#modalRoot").querySelectorAll("[data-sdel]").forEach(b => b.onclick = async () => {
+    const r = await SVC.deleteShift(Number(b.dataset.sdel), ME);
+    r.ok ? (toast("삭제했습니다"), reload()) : toast(r.msg);
+  });
+  $("#modalRoot").querySelectorAll("[data-sedit]").forEach(b => b.onclick = async () => {
+    const sh = await DB.get("schedule", Number(b.dataset.sedit));
+    const nf = prompt("시작 시각 (HH:MM)", sh.startTime); if (nf == null) return;
+    const nt = prompt("종료 시각 (HH:MM)", sh.endTime); if (nt == null) return;
+    const r = await SVC.updateShift(sh.schId, { startTime: nf, endTime: nt }, ME);
+    r.ok ? (toast("수정했습니다"), reload()) : toast(r.msg);
+  });
+}
+
+/* 공연 등록/수정 (관리자) */
+async function openEventForm(ds, schId) {
+  const e = schId ? await DB.get("schedule", schId) : null;
+  openModal(`
+    <h3>${e ? "공연 정보 수정" : "공연 등록"} <span style="font-size:12px;color:var(--sub);font-weight:600">${ds}</span></h3>
+    <label>공연명 *</label><input id="efvTitle" value="${e ? esc(e.title) : ""}" placeholder="예: 신년음악회">
+    <div class="row2">
+      <div><label>장소</label><input id="efvVenue" value="${e ? esc(e.venue || "") : ""}" placeholder="예: 콘서트홀"></div>
+      <div><label>공연 시간</label><input id="efvPerf" value="${e ? esc(e.perfTime || "") : ""}" placeholder="예: 19:30 (2회: 15:00/19:30)"></div>
+    </div>
+    <label>객석 오픈 사항</label><input id="efvOpen" value="${e ? esc(e.houseOpen || "") : ""}" placeholder="예: 18:50 오픈, 1·2층 동시">
+    <label>근무시간 (사원 신청 시 이 시간으로 고정)</label>
+    <div class="row2">
+      <div><input type="time" id="efvWs" value="${e && e.workStart ? e.workStart : "17:00"}"></div>
+      <div><input type="time" id="efvWe" value="${e && e.workEnd ? e.workEnd : "22:00"}"></div>
+    </div>
+    <label>특이사항</label><textarea id="efvNote" rows="3" placeholder="예: 시야제한석 판매, 중간 휴식 15분, 커튼콜 촬영 허용">${e ? esc(e.note || "") : ""}</textarea>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn ghost" id="efvCancel">취소</button><button class="btn" id="efvSave">${e ? "수정" : "등록"}</button>
+    </div>`);
+  $("#efvCancel").onclick = () => { closeModal(); openDayModal(ds); };
+  $("#efvSave").onclick = async () => {
+    const fields = { title: $("#efvTitle").value.trim(), venue: $("#efvVenue").value.trim(), perfTime: $("#efvPerf").value.trim(),
+      houseOpen: $("#efvOpen").value.trim(), workStart: $("#efvWs").value, workEnd: $("#efvWe").value, note: $("#efvNote").value.trim() };
+    const r = e ? await SVC.updateEvent(schId, fields, ME) : await SVC.addEvent({ date: ds, ...fields }, ME);
+    if (!r.ok) return toast(r.msg);
+    closeModal(); toast(e ? "수정했습니다" : "공연을 등록했습니다");
+    await renderSchedule(); openDayModal(ds);
+  };
+}
+
+/* ── 엑셀 유틸 ── */
+async function ensureXLSX() {
+  if (window.XLSX) return true;
+  try {
+    await new Promise((res, rej) => {
+      const sc = document.createElement("script");
+      sc.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+      sc.onload = res; sc.onerror = rej;
+      document.head.appendChild(sc);
+    });
+    return !!window.XLSX;
+  } catch (e) { return false; }
+}
+/* 명세서 → 엑셀 시트 데이터 (1인 양식) */
+function buildSlipAoa(p, u) {
+  const rows = [
+    [`${p.ym} ${p.empType === "daily" ? "일용직 " : ""}급여명세서`],
+    [],
+    ["사번", p.userId, "성명", p.userName],
+    ["고용형태", p.empType === "daily" ? "일용직" : "정규직", "지급계좌", u ? `${u.bank || ""} ${u.account || ""}`.trim() : ""],
+    ["산정기준", p.basis === "schedule" ? "확정 근무스케줄" : "출퇴근 기록", "4대보험", p.insured ? `적용(월 ${p.workDays}일 근무)` : (p.empType === "daily" ? "고용보험만" : "적용")],
+    [],
+  ];
+  if (p.empType === "daily" && (p.details || []).length) {
+    rows.push(["① 근무 내역"], ["날짜", "공연/구분", "시작", "종료", "인정시간"]);
+    for (const dd of p.details) rows.push([dd.date, dd.label, dd.s, dd.e, CORE.minToHM(dd.min)]);
+    rows.push([]);
+  }
+  rows.push(["② 급여 산출 내역"], ["항목", "금액(원)"]);
+  const pay = [["일당/기본급 합계", p.base]];
+  if (p.allowance) pay.push(["제수당", p.allowance]);
+  if (p.overtime) pay.push(["연장근로수당", p.overtime]);
+  if (p.nightPay) pay.push(["야간근로수당", p.nightPay]);
+  if (p.holidayPay) pay.push(["휴일근로수당", p.holidayPay]);
+  if (p.juhyuPay) pay.push(["주휴수당", p.juhyuPay]);
+  if (p.itemAllow) pay.push(["기타수당", p.itemAllow]);
+  pay.push(["지급 합계", p.gross]);
+  if (p.pension) pay.push(["국민연금", -p.pension]);
+  if (p.health) pay.push(["건강보험", -p.health]);
+  if (p.care) pay.push(["장기요양", -p.care]);
+  pay.push(["고용보험", -p.employ], ["소득세", -p.incomeTax], ["지방소득세", -p.localTax]);
+  if (p.itemDeduct) pay.push(["기타공제", -p.itemDeduct]);
+  pay.push(["공제 합계", -p.totalDeduct], ["실수령액", p.net]);
+  rows.push(...pay, []);
+  rows.push(["③ 확인"],
+    ["근무내역 확인", p.workConfirmedAt ? `서명 완료 · ${p.workConfirmedAt.slice(0, 16).replace("T", " ")}` : "미확인"],
+    ["최종 확인", p.finalConfirmedAt ? `서명 완료 · ${p.finalConfirmedAt.slice(0, 16).replace("T", " ")}` : "미확인"]);
+  return rows;
+}
+globalThis.buildSlipAoa = buildSlipAoa;
+/* 간단 CSV 파서 (따옴표 필드 지원) */
+function parseCsv(text) {
+  const out = []; let row = [], cur = "", q = false;
+  text = text.replace(/^\uFEFF/, "");
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cur); cur = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cur); out.push(row); row = []; cur = ""; }
+    else cur += c;
+  }
+  if (cur !== "" || row.length) { row.push(cur); out.push(row); }
+  return out.filter(r => r.some(c => String(c).trim() !== ""));
+}
+globalThis.parseCsv = parseCsv;
+const EV_HEADERS = ["날짜", "공연명", "장소", "공연시간", "객석오픈", "근무시작", "근무종료", "특이사항"];
+function rowsToEvents(aoa) {
+  const body = aoa[0] && String(aoa[0][0]).includes("날짜") ? aoa.slice(1) : aoa;
+  return body.map(r => ({ date: String(r[0] || "").trim(), title: String(r[1] || "").trim(), venue: String(r[2] || "").trim(),
+    perfTime: String(r[3] || "").trim(), houseOpen: String(r[4] || "").trim(), workStart: String(r[5] || "").trim(),
+    workEnd: String(r[6] || "").trim(), note: String(r[7] || "").trim() }));
+}
+globalThis.rowsToEvents = rowsToEvents;
+
+/* 공연 엑셀/CSV 일괄 등록 (관리자) */
+function openBulkEvents() {
+  openModal(`
+    <h3>📤 공연 일정 엑셀 일괄 등록</h3>
+    <div style="font-size:13px;color:var(--sub);margin-top:6px;line-height:1.6">
+      열 순서: <b>날짜(YYYY-MM-DD), 공연명, 장소, 공연시간, 객석오픈, 근무시작(HH:MM), 근무종료, 특이사항</b><br>
+      양식을 내려받아 채운 뒤 CSV 또는 엑셀(.xlsx)로 업로드하세요.
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn small ghost" id="bkTpl">📄 양식 다운로드 (CSV)</button>
+      <label class="btn small" style="margin:0">파일 선택<input type="file" id="bkFile" accept=".csv,.xlsx,.xls" class="hidden"></label>
+    </div>
+    <div id="bkResult" style="margin-top:12px;font-size:13px"></div>
+    <button class="btn ghost" id="bkClose" style="margin-top:12px">닫기</button>`);
+  $("#bkClose").onclick = () => { closeModal(); renderSchedule(); };
+  $("#bkTpl").onclick = () => {
+    const ym = CORE.monthStr(new Date());
+    const csv = "\uFEFF" + [EV_HEADERS.join(","),
+      `${ym}-15,신년음악회,콘서트홀,19:30,"18:50 오픈, 1·2층 동시",17:00,22:00,커튼콜 촬영 허용`,
+      `${ym}-16,발레 갈라,대극장,15:00/19:00,14:30 오픈,13:00,21:30,2회차 공연`].join("\r\n");
+    try {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      a.download = "공연일정_양식.csv"; a.click(); URL.revokeObjectURL(a.href);
+    } catch (e) { toast("이 환경에서는 다운로드를 지원하지 않습니다"); }
+  };
+  $("#bkFile").addEventListener("change", async e => {
+    const file = e.target.files[0]; if (!file) return;
+    let aoa;
+    try {
+      if (/\.csv$/i.test(file.name)) aoa = parseCsv(await file.text());
+      else {
+        if (!await ensureXLSX()) return toast("엑셀 라이브러리 로드 실패 — CSV로 저장해 업로드하세요");
+        const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+        aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false });
+      }
+    } catch (err) { return toast("파일을 읽을 수 없습니다"); }
+    const r = await SVC.bulkAddEvents(rowsToEvents(aoa), ME);
+    if (!r.ok) return toast(r.msg);
+    $("#bkResult").innerHTML = `<b style="color:var(--ok)">${r.added}건 등록 완료</b>${r.errors.length ? `<div style="color:var(--stamp);margin-top:6px">${r.errors.slice(0, 8).map(esc).join("<br>")}${r.errors.length > 8 ? "<br>…" : ""}</div>` : ""}`;
+    toast(`공연 ${r.added}건 일괄 등록`);
+  });
+}
+
+/* ── 게시판 ── */
+let boardTab = "notice";
+const canWrite = b => b && (b.write === "all" || ME.role === "admin");
+async function renderBoard(param) {
+  if (!CFG.boards.find(b => b.key === boardTab)) boardTab = CFG.boards[0]?.key;
+  const cur = CFG.boards.find(b => b.key === boardTab);
+  const posts = (await DB.all("posts")).filter(p => p.board === boardTab).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  $("#view-board").innerHTML = `
+    <div class="toolbar">
+      <div class="seg" style="margin:0;flex:1">
+        ${CFG.boards.map(b => `<button data-t="${esc(b.key)}" class="${boardTab === b.key ? "active" : ""}">${esc(b.name)}${b.write === "admin" ? " 🔒" : ""}</button>`).join("")}
+      </div>
+      ${canWrite(cur) ? `<button class="btn small" id="btnPostWrite">＋ 글쓰기</button>` : ""}
+    </div>
+    <div class="card" style="padding:6px 14px">
+      ${posts.length ? posts.map(p => `
+        <button class="list-row" data-post="${p.postId}">
+          <div class="grow"><div class="t">${esc(p.title)} ${p.comments.length ? `<span style="color:var(--navy);font-size:12.5px">[${p.comments.length}]</span>` : ""}</div>
+          <div class="s">${esc(p.authorName)} · ${fmtDate(p.createdAt)} · 조회 ${p.views}</div></div>
+        </button>`).join("") : `<div class="empty">게시글이 없습니다.</div>`}
+    </div>`;
+  $("#view-board").querySelectorAll(".seg button").forEach(b => b.onclick = () => { boardTab = b.dataset.t; renderBoard(); });
+  const w = $("#btnPostWrite"); if (w) w.onclick = openPostWrite;
+  $("#view-board").querySelectorAll("[data-post]").forEach(b => b.onclick = () => openPostDetail(Number(b.dataset.post)));
+  if (param && param.open) openPostDetail(param.open);
+}
+function openPostWrite() {
+  openModal(`
+    <h3>글쓰기</h3>
+    <label>게시판</label>
+    <select id="pwBoard">${CFG.boards.filter(b => canWrite(b)).map(b => `<option value="${esc(b.key)}" ${boardTab === b.key ? "selected" : ""}>${esc(b.name)}</option>`).join("")}</select>
+    <label>제목</label><input id="pwTitle">
+    <label>내용</label><textarea id="pwBody" rows="6"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn ghost" id="pwCancel">취소</button><button class="btn" id="pwSubmit">등록</button>
+    </div>`);
+  $("#pwCancel").onclick = closeModal;
+  $("#pwSubmit").onclick = async () => {
+    const title = $("#pwTitle").value.trim(); if (!title) return toast("제목을 입력하세요");
+    await DB.add("posts", { board: $("#pwBoard").value, title, body: $("#pwBody").value.trim(), authorId: ME.id, authorName: ME.name, createdAt: new Date().toISOString(), views: 0, comments: [] });
+    if ($("#pwBoard").value === "notice") {
+      const all = (await DB.all("users")).filter(u => u.status !== "pending" && u.id !== ME.id);
+      await SVC.notify(all.map(u => u.id), `📢 새 공지: ${title}`, "board");
+    }
+    boardTab = $("#pwBoard").value;
+    closeModal(); toast("등록했습니다"); renderBoard();
+  };
+}
+async function openPostDetail(postId) {
+  const p = await DB.get("posts", postId);
+  if (!p) return toast("게시글을 찾을 수 없습니다");
+  p.views++; await DB.put("posts", p);
+  openModal(`
+    <h3>${esc(p.title)}</h3>
+    <div style="font-size:12.5px;color:var(--sub);margin:4px 0 12px">${esc(p.authorName)} · ${fmtDate(p.createdAt)} · 조회 ${p.views}</div>
+    <div class="doc-body" style="border-top:1px solid var(--line)">${esc(p.body)}</div>
+    <div style="margin-top:12px"><b style="font-size:13.5px">댓글 ${p.comments.length}</b>
+      ${p.comments.map(c => `<div class="comment-log"><div class="c"><b>${esc(c.authorName)}</b> ${esc(c.body)} <span style="color:var(--sub);font-size:11.5px">${fmtDate(c.date)}</span></div></div>`).join("")}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <input id="pdComment" placeholder="댓글 입력…"><button class="btn small" id="pdCmtBtn" style="flex:none">등록</button>
+    </div>
+    ${(p.authorId === ME.id || ME.role === "admin") ? `<button class="btn danger small" id="pdDel" style="margin-top:12px">글 삭제</button>` : ""}
+    <button class="btn ghost" id="pdClose" style="margin-top:10px">닫기</button>`);
+  $("#pdClose").onclick = () => { closeModal(); renderBoard(); };
+  $("#pdCmtBtn").onclick = async () => {
+    const body = $("#pdComment").value.trim(); if (!body) return;
+    p.comments.push({ authorId: ME.id, authorName: ME.name, body, date: new Date().toISOString() });
+    await DB.put("posts", p); openPostDetail(postId);
+  };
+  const del = $("#pdDel");
+  if (del) del.onclick = async () => { await DB.del("posts", postId); closeModal(); toast("삭제했습니다"); renderBoard(); };
+}
+
+/* ── 근태 ── */
+let clockTimer = null;
+async function renderAttend() {
+  const today = CORE.dateStr(new Date());
+  const atts = (await DB.all("attendance")).filter(a => a.userId === ME.id);
+  const myToday = atts.find(a => a.date === today);
+  const ym = CORE.monthStr(new Date());
+  const monthAtts = atts.filter(a => a.date.startsWith(ym)).sort((a, b) => b.date.localeCompare(a.date));
+  const totalMin = monthAtts.reduce((s, a) => s + (a.workMin || 0), 0);
+  const lateN = monthAtts.filter(a => a.status.startsWith("지각")).length;
+  // 이번 주(월~일) 집계: 기본/초과/인정근무
+  const now = new Date();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const wkFrom = CORE.dateStr(monday);
+  const std = SVC.stdDayMin();
+  const wkAtts = atts.filter(a => a.date >= wkFrom && a.date <= today && a.outTime);
+  const wkTotal = wkAtts.reduce((s, a) => s + (a.workMin || 0), 0);
+  const wkOt = wkAtts.reduce((s, a) => s + Math.max(0, (a.workMin || 0) - std), 0);
+  const wkBase = wkTotal - wkOt;
+  const leave = await SVC.leaveStatus(ME.id);
+
+  $("#view-attend").innerHTML = `
+    <div class="card clock-card">
+      <div class="clock-time" id="liveClock">--:--:--</div>
+      <div class="clock-date">${today} · 기준 근무시간 ${esc(CFG.work.start)} ~ ${esc(CFG.work.end)} (휴게 ${CFG.work.breakMin}분)</div>
+      <div class="clock-btns">
+        <button class="btn" id="btnIn" ${myToday ? "disabled" : ""}>출근</button>
+        <button class="btn ghost" id="btnOut" ${myToday && !myToday.outTime ? "" : "disabled"}>퇴근</button>
+      </div>
+      <div class="clock-state">${!myToday ? "아직 출근 전입니다" : myToday.outTime ? `${myToday.inTime} 출근 → ${myToday.outTime} 퇴근 · ${esc(myToday.status)}` : `${myToday.inTime} 출근 · 근무중`}</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>이번 주 근무 집계</h3><span style="font-size:12px;color:var(--sub)">${wkFrom.slice(5)} ~ 오늘</span></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px">
+        <div>기본근무 <b>${CORE.minToHM(wkBase)}</b></div>
+        <div style="color:var(--stamp)">초과근무 <b>${CORE.minToHM(wkOt)}</b></div>
+        <div style="color:var(--navy)">인정근무 <b>${CORE.minToHM(wkTotal)}</b></div>
+      </div>
+      <div style="height:8px;background:var(--paper);border-radius:99px;overflow:hidden;margin-top:10px;display:flex">
+        <div style="width:${Math.min(100, wkBase / (40 * 60) * 100)}%;background:var(--navy)"></div>
+        <div style="width:${Math.min(100, wkOt / (40 * 60) * 100)}%;background:var(--stamp)"></div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="k">${ym} 근무일</div><div class="v">${monthAtts.length}<small>일</small></div></div>
+      <div class="stat"><div class="k">누적 근무시간</div><div class="v" style="font-size:17px;padding-top:4px">${CORE.minToHM(totalMin)}</div></div>
+      <div class="stat"><div class="k">지각</div><div class="v">${lateN}<small>회</small></div></div>
+      ${ME.empType !== "daily" ? `<div class="stat"><div class="k">연차 잔여</div><div class="v">${leave.remain}<small>/ ${leave.granted}일</small></div></div>` : ""}
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>이달 근태 기록</h3><button class="more" id="btnReqWork">근무/휴가 신청 ›</button></div>
+      <div class="table-wrap"><table class="grid">
+        <tr><th>날짜</th><th>출근</th><th>퇴근</th><th>근무</th><th>상태</th></tr>
+        ${monthAtts.length ? monthAtts.map(a => `<tr><td>${a.date.slice(5)}</td><td>${a.inTime || "-"}</td><td>${a.outTime || "-"}</td><td>${a.workMin ? CORE.minToHM(a.workMin) : "-"}</td><td>${esc(a.status)}</td></tr>`).join("") : `<tr><td colspan="5" style="color:var(--sub)">기록 없음</td></tr>`}
+      </table></div>
+    </div>`;
+  const tick = () => { const el = $("#liveClock"); if (el) el.textContent = new Date().toTimeString().slice(0, 8); };
+  clearInterval(clockTimer); clockTimer = setInterval(tick, 1000); tick();
+  $("#btnIn").onclick = async () => {
+    const r = await SVC.clockIn(ME);
+    toast(r.ok ? `출근 완료 (${r.inTime})` : r.msg); renderAttend();
+  };
+  $("#btnOut").onclick = async () => {
+    const r = await SVC.clockOut(ME);
+    toast(r.ok ? `퇴근 완료 (${r.outTime})` : r.msg); renderAttend();
+  };
+  $("#btnReqWork").onclick = () => go("approval", "req");
+}
+
+/* ── 급여 ── */
+let payMasked = true;
+const PF = n => payMasked ? "•••,•••" : F(n);
+async function renderPay() {
+  const slips = (await DB.all("payroll")).filter(p => p.userId === ME.id).sort((a, b) => b.ym.localeCompare(a.ym));
+  $("#view-pay").innerHTML = `
+    <div class="toolbar">
+      <button class="btn small ghost" id="btnPayMask">${payMasked ? "🔓 금액 표시" : "🔒 금액 숨김"}</button>
+      <button class="btn small ghost" id="btnMySign">✍️ ${ME.signature ? "서명 변경" : "서명 등록"}</button>
+      ${ME.role === "admin" ? `<button class="btn small" id="btnGoPayAdmin">급여 등록 ›</button>` : "<span></span>"}
+    </div>
+    ${slips.length ? slips.map(p => (p.kind !== "bonus" && p.empType === "daily") ? dailySlipHtml(p) : paySlipHtml(p)).join("") : `<div class="card"><div class="empty">발급된 급여명세서가 없습니다.</div></div>`}
+    ${CFG.payPolicy ? `<div class="card"><h3 style="font-size:14px">📌 급여 지침</h3><div style="white-space:pre-wrap;font-size:13px;color:var(--sub);margin-top:6px">${esc(CFG.payPolicy)}</div></div>` : ""}
+    <div class="card" style="font-size:12px;color:var(--sub)">공제액은 설정된 요율과 간이세액표 근사치 기반의 참고용 계산입니다. 소득세 1,000원 미만은 소액부징수로 0원 처리됩니다.</div>`;
+  const g = $("#btnGoPayAdmin"); if (g) g.onclick = () => go("admin");
+  $("#btnPayMask").onclick = () => { payMasked = !payMasked; renderPay(); };
+  $("#btnMySign").onclick = openSignForm;
+  $("#view-pay").querySelectorAll("[data-confirm]").forEach(b => b.onclick = async () => {
+    if (!ME.signature) { toast("먼저 서명을 등록하세요"); return openSignForm(); }
+    const r = await SVC.confirmSlip(Number(b.dataset.pay), b.dataset.confirm, ME);
+    if (!r.ok) return toast(r.msg);
+    toast(b.dataset.confirm === "work" ? "근무내역을 확인했습니다 (서명 완료)" : "급여를 최종 확인했습니다 (서명 완료)");
+    renderPay();
+  });
+}
+
+/* 서명 렌더링: dataURL이면 이미지, 아니면 필기체풍 텍스트 */
+const signHtml = sg => sg && sg.startsWith("data:image")
+  ? `<img src="${sg}" alt="서명" style="height:40px">`
+  : `<span style="font-family:cursive;font-size:20px;color:var(--navy)">${esc(sg || "")}</span>`;
+
+/* 서명 등록 (캔버스 + 텍스트 대체) */
+function openSignForm() {
+  openModal(`
+    <h3>✍️ 전자서명 등록</h3>
+    <div style="font-size:12.5px;color:var(--sub);margin:4px 0 8px">일용직 급여명세서의 근무 확인·최종 확인에 사용됩니다.</div>
+    <canvas id="sgCanvas" width="440" height="150" style="width:100%;border:1.5px dashed var(--line);border-radius:10px;background:#fff;touch-action:none"></canvas>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn small ghost" id="sgClear">지우기</button>
+      <span style="flex:1"></span>
+    </div>
+    <label>손글씨가 어려우면 서명 텍스트 입력</label>
+    <input id="sgText" placeholder="예: ${esc(ME.name)}" value="">
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn ghost" id="sgCancel">취소</button><button class="btn" id="sgSave">저장</button>
+    </div>`);
+  const cv = $("#sgCanvas");
+  let drew = false;
+  try {
+    const ctx = cv.getContext("2d");
+    ctx.lineWidth = 2.5; ctx.lineCap = "round"; ctx.strokeStyle = "#1E2430";
+    let on = false;
+    const pos = e => { const r = cv.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e;
+      return { x: (t.clientX - r.left) * (cv.width / r.width), y: (t.clientY - r.top) * (cv.height / r.height) }; };
+    const down = e => { on = true; drew = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+    const move = e => { if (!on) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); };
+    const up = () => on = false;
+    cv.addEventListener("mousedown", down); cv.addEventListener("mousemove", move); window.addEventListener("mouseup", up);
+    cv.addEventListener("touchstart", down, { passive: false }); cv.addEventListener("touchmove", move, { passive: false }); cv.addEventListener("touchend", up);
+    $("#sgClear").onclick = () => { ctx.clearRect(0, 0, cv.width, cv.height); drew = false; };
+  } catch (e) { /* 캔버스 미지원 환경: 텍스트 서명만 사용 */ }
+  $("#sgCancel").onclick = closeModal;
+  $("#sgSave").onclick = async () => {
+    let sign = $("#sgText").value.trim();
+    if (drew) { try { sign = cv.toDataURL("image/png"); } catch (e) {} }
+    if (!sign) return toast("서명을 그리거나 입력하세요");
+    const r = await SVC.setSignature(ME, sign);
+    if (!r.ok) return toast(r.msg);
+    ME = await DB.get("users", ME.id);
+    closeModal(); toast("서명을 저장했습니다"); renderPay();
+  };
+}
+
+/* ── 일용직 전용 명세서: 근무내역 → 근무확인 서명 → 산출내역 → 최종확인 서명 ── */
+function dailySlipHtml(p) {
+  const dts = p.details || [];
+  return `<div class="card" style="border-top:3px solid var(--navy)">
+    <div class="card-head">
+      <h3>${p.ym} 일용직 급여명세서 ${p.issued ? `<span class="pill ok" style="vertical-align:2px">발급</span>` : ""}
+        ${p.finalConfirmedAt ? `<span class="pill ok" style="vertical-align:2px">확인 완료</span>` : p.workConfirmedAt ? `<span class="pill ing" style="vertical-align:2px">최종확인 대기</span>` : `<span class="pill wait" style="vertical-align:2px">근무확인 대기</span>`}</h3>
+      <span class="pay-net">${PF(p.net)}원</span>
+    </div>
+    <div style="font-size:12.5px;color:var(--sub)">일당 ${PF(p.dailyWage)}원 × ${p.workDays}일 · ${p.basis === "schedule" ? "확정 스케줄 기준" : "출퇴근 기록 기준"}${p.insured ? " · 4대보험 적용(월 " + p.workDays + "일 근무)" : ""}</div>
+
+    <label style="margin-top:14px">① 근무 내역 (신청·확정 기준)</label>
+    <div class="table-wrap"><table class="grid">
+      <tr><th>날짜</th><th>공연/구분</th><th>근무시간</th><th>인정</th></tr>
+      ${dts.length ? dts.map(dd => `<tr><td>${dd.date.slice(5)}</td><td class="l">${esc(dd.label)}</td><td>${dd.s}~${dd.e}</td><td>${CORE.minToHM(dd.min)}</td></tr>`).join("") : `<tr><td colspan="4" style="color:var(--sub)">근무 내역 없음</td></tr>`}
+    </table></div>
+    <div style="margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:${p.workConfirmedAt ? "var(--ok-t)" : "#fff"}">
+      ${p.workConfirmedAt
+        ? `<div style="display:flex;align-items:center;gap:10px;font-size:13px"><b>근무내역 확인</b> ${signHtml(p.workSign)} <span style="color:var(--sub)">${fmtDate(p.workConfirmedAt)}</span></div>`
+        : `<button class="btn small" data-confirm="work" data-pay="${p.payId}">✍️ 근무내역 확인 (서명)</button>
+           <span style="font-size:12px;color:var(--sub);margin-left:8px">위 근무 내역이 맞으면 서명해 주세요</span>`}
+    </div>
+
+    <label style="margin-top:14px">② 급여 산출 내역</label>
+    <table class="pay-table">
+      <tr><td>일당 합계 (${p.workDays}일)</td><td>${PF(p.base)}</td></tr>
+      ${p.overtime ? `<tr><td>연장근로수당 (${CORE.minToHM(p.otMin)})</td><td>${PF(p.overtime)}</td></tr>` : ""}
+      ${p.nightPay ? `<tr><td>야간근로수당 (${CORE.minToHM(p.nightMin)})</td><td>${PF(p.nightPay)}</td></tr>` : ""}
+      ${p.holidayPay ? `<tr><td>휴일근로수당 (${CORE.minToHM(p.holidayMin)})</td><td>${PF(p.holidayPay)}</td></tr>` : ""}
+      ${p.juhyuPay ? `<tr><td>주휴수당</td><td>${PF(p.juhyuPay)}</td></tr>` : ""}
+      ${p.itemAllow ? `<tr><td>기타수당</td><td>${PF(p.itemAllow)}</td></tr>` : ""}
+      <tr class="sum"><td>지급 합계</td><td>${PF(p.gross)}</td></tr>
+      ${p.pension ? `<tr class="deduct"><td>국민연금</td><td>-${PF(p.pension)}</td></tr>` : ""}
+      ${p.health ? `<tr class="deduct"><td>건강보험</td><td>-${PF(p.health)}</td></tr>` : ""}
+      ${p.care ? `<tr class="deduct"><td>장기요양보험</td><td>-${PF(p.care)}</td></tr>` : ""}
+      <tr class="deduct"><td>고용보험</td><td>-${PF(p.employ)}</td></tr>
+      <tr class="deduct"><td>일용근로소득세</td><td>-${PF(p.incomeTax)}</td></tr>
+      <tr class="deduct"><td>지방소득세</td><td>-${PF(p.localTax)}</td></tr>
+      ${p.itemDeduct ? `<tr class="deduct"><td>기타공제</td><td>-${PF(p.itemDeduct)}</td></tr>` : ""}
+      <tr class="sum"><td>공제 합계</td><td style="color:var(--stamp)">-${PF(p.totalDeduct)}</td></tr>
+      <tr class="sum"><td>실수령액</td><td style="color:var(--navy)">${PF(p.net)}원</td></tr>
+    </table>
+    <div style="margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:${p.finalConfirmedAt ? "var(--ok-t)" : "#fff"}">
+      ${p.finalConfirmedAt
+        ? `<div style="display:flex;align-items:center;gap:10px;font-size:13px"><b>최종 확인</b> ${signHtml(p.finalSign)} <span style="color:var(--sub)">${fmtDate(p.finalConfirmedAt)}</span></div>`
+        : p.workConfirmedAt
+          ? `<button class="btn small" data-confirm="final" data-pay="${p.payId}">✍️ 급여 최종 확인 (서명)</button>
+             <span style="font-size:12px;color:var(--sub);margin-left:8px">산출 내역 확인 후 최종 서명해 주세요</span>`
+          : `<span style="font-size:12.5px;color:var(--sub)">근무내역 확인 후 최종 확인이 가능합니다</span>`}
+    </div>
+  </div>`;
+}
+function paySlipHtml(p) {
+  const isBonus = p.kind === "bonus";
+  return `<div class="card">
+    <div class="card-head">
+      <h3>${p.ym} ${isBonus ? esc(p.label || "성과급") + " 명세서" : "급여명세서"}
+        ${p.issued ? `<span class="pill ok" style="vertical-align:2px">발급</span>` : ""}</h3>
+      <span class="pay-net">${PF(p.net)}원</span></div>
+    ${!isBonus && p.empType === "daily" ? `<div style="font-size:12.5px;color:var(--sub);margin-bottom:4px">일용직 · 일당 ${PF(p.dailyWage)}원 × ${p.workDays}일${p.otMin ? ` · 초과 ${CORE.minToHM(p.otMin)}` : ""}${p.basis === "schedule" ? " · 확정 스케줄 기준" : ""}</div>` : ""}
+    ${!isBonus && p.empType !== "daily" && p.otMin ? `<div style="font-size:12.5px;color:var(--sub);margin-bottom:4px">근무 ${p.workDays ?? "-"}일 · 초과근무 ${CORE.minToHM(p.otMin)} 자동 반영${p.lateN ? ` · 지각 ${p.lateN}회` : ""}</div>` : ""}
+    <table class="pay-table">
+      <tr><td>${p.kind === "bonus" ? "성과급" : p.empType === "daily" ? "일당 합계" : "기본급"}</td><td>${PF(p.base)}</td></tr>
+      ${p.kind === "bonus" ? "" : p.empType === "daily" ? `<tr><td>연장근로수당</td><td>${PF(p.overtime)}</td></tr>` : `<tr><td>제수당</td><td>${PF(p.allowance)}</td></tr>
+      <tr><td>연장근로수당</td><td>${PF(p.overtime)}</td></tr>`}
+      ${p.nightPay ? `<tr><td>야간근로수당 (${CORE.minToHM(p.nightMin)})</td><td>${PF(p.nightPay)}</td></tr>` : ""}
+      ${p.juhyuPay ? `<tr><td>주휴수당</td><td>${PF(p.juhyuPay)}</td></tr>` : ""}
+      ${p.itemAllow ? `<tr><td>기타수당</td><td>${PF(p.itemAllow)}</td></tr>` : ""}
+      <tr class="sum"><td>지급 합계</td><td>${PF(p.gross)}</td></tr>
+      ${p.empType === "daily" ? "" : `<tr class="deduct"><td>국민연금</td><td>-${PF(p.pension)}</td></tr>
+      <tr class="deduct"><td>건강보험</td><td>-${PF(p.health)}</td></tr>
+      <tr class="deduct"><td>장기요양보험</td><td>-${PF(p.care)}</td></tr>`}
+      <tr class="deduct"><td>고용보험</td><td>-${PF(p.employ)}</td></tr>
+      <tr class="deduct"><td>소득세</td><td>-${PF(p.incomeTax)}</td></tr>
+      <tr class="deduct"><td>지방소득세</td><td>-${PF(p.localTax)}</td></tr>
+      ${p.itemDeduct ? `<tr class="deduct"><td>기타공제</td><td>-${PF(p.itemDeduct)}</td></tr>` : ""}
+      <tr class="sum"><td>공제 합계</td><td style="color:var(--stamp)">-${PF(p.totalDeduct)}</td></tr>
+      <tr class="sum"><td>실수령액</td><td style="color:var(--navy)">${PF(p.net)}원</td></tr>
+    </table></div>`;
+}
+
+/* ── 관리자 ── */
+let adminTab = "emp";
+async function renderAdmin() {
+  if (ME.role !== "admin") { $("#view-admin").innerHTML = `<div class="card"><div class="empty">관리자 전용 메뉴입니다.</div></div>`; return; }
+  $("#view-admin").innerHTML = `
+    <div class="seg">
+      <button data-t="emp" class="${adminTab === "emp" ? "active" : ""}">사원</button>
+      <button data-t="payg" class="${adminTab === "payg" ? "active" : ""}">급여</button>
+      <button data-t="docs" class="${adminTab === "docs" ? "active" : ""}">문서관리</button>
+      <button data-t="audit" class="${adminTab === "audit" ? "active" : ""}">감사</button>
+      <button data-t="att" class="${adminTab === "att" ? "active" : ""}">근태</button>
+      <button data-t="cfg" class="${adminTab === "cfg" ? "active" : ""}">설정</button>
+    </div>
+    <div id="adminBody"></div>`;
+  $("#view-admin").querySelectorAll(".seg button").forEach(b => b.onclick = () => { adminTab = b.dataset.t; renderAdmin(); });
+  if (adminTab === "emp") renderAdminEmp();
+  if (adminTab === "payg") renderAdminPay();
+  if (adminTab === "docs") renderAdminDocs();
+  if (adminTab === "audit") renderAdminAudit();
+  if (adminTab === "att") renderAdminAtt();
+  if (adminTab === "cfg") renderAdminCfg();
+}
+/* 가입 신청 상세 확인 + 사번 발급 승인 */
+async function openApproveDetail(tempId) {
+  const u = await DB.get("users", tempId);
+  if (!u) return toast("신청을 찾을 수 없습니다");
+  const suggest = await SVC.nextEmpId();
+  const isDaily = u.empType === "daily";
+  openModal(`
+    <h3>가입 신청 상세 확인</h3>
+    <div class="doc-meta" style="margin-top:10px">
+      <span>이름</span><b>${esc(u.name)}</b>
+      <span>부서 / 직급</span><b>${esc(u.dept || "-")} / ${esc(u.position || "-")}</b>
+      <span>고용형태</span><b>${isDaily ? "일용직(일당)" : "정규직(월급)"}</b>
+      <span>주민등록번호</span><b>${esc(u.rrn || "-")}</b>
+      <span>연락처</span><b>${esc(u.phone || "-")}</b>
+      <span>이메일</span><b>${esc(u.email || "-")}</b>
+      <span>급여 계좌</span><b>${esc(u.bank || "")} ${esc(u.account || "")}</b>
+      <span>신청 일시</span><b>${u.appliedAt ? fmtDate(u.appliedAt) : "-"}</b>
+    </div>
+    <div style="border-top:1px solid var(--line);margin:12px 0;padding-top:6px"><b style="font-size:14px">승인 조건 입력</b></div>
+    <label style="margin-top:6px">발급 사번 *</label><input id="apvId" inputmode="numeric" value="${esc(suggest)}">
+    ${isDaily
+      ? `<label>일당 *</label><input id="apvWage" inputmode="numeric" value="100000">`
+      : `<div class="row2">
+          <div><label>기본급(월) *</label><input id="apvWage" inputmode="numeric" value="2500000"></div>
+          <div><label>연차 부여일수</label><input id="apvLeave" inputmode="numeric" value="15"></div>
+        </div>`}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn danger" id="apvNo">거절</button>
+      <button class="btn ghost" id="apvCancel">닫기</button>
+      <button class="btn" id="apvOk">사번 발급·승인</button>
+    </div>`);
+  $("#apvCancel").onclick = closeModal;
+  $("#apvNo").onclick = async () => {
+    const r = await SVC.approveUser(tempId, false, ME);
+    r.ok ? (closeModal(), toast("거절 처리했습니다"), renderAdminEmp()) : toast(r.msg);
+  };
+  $("#apvOk").onclick = async () => {
+    const opts = { newId: $("#apvId").value.trim() };
+    if (isDaily) opts.dailyWage = Number($("#apvWage").value) || 0;
+    else { opts.salaryBase = Number($("#apvWage").value) || 0; opts.annualLeave = Number($("#apvLeave").value) || 15; }
+    const r = await SVC.approveUser(tempId, true, ME, opts);
+    if (!r.ok) return toast(r.msg);
+    closeModal(); toast(`승인 완료 — 사번 ${r.newId} 발급`); renderAdminEmp();
+  };
+}
+
+let empQ = "";
+async function renderAdminEmp() {
+  USERS = await DB.all("users");
+  const pend = USERS.filter(u => u.status === "pending");
+  const act = USERS.filter(u => u.status !== "pending");
+  const shown = empQ ? act.filter(u => (u.name + u.id + (u.dept || "") + (u.position || "")).includes(empQ)) : act;
+  $("#adminBody").innerHTML = `
+    ${pend.length ? `<div class="card" style="border-color:var(--warn)">
+      <div class="card-head"><h3>⏳ 가입 승인 대기 ${pend.length}건</h3></div>
+      ${pend.map(u => `
+        <button class="list-row" data-udetail="${esc(u.id)}">
+          <span class="avatar">${esc(u.name[0])}</span>
+          <div class="grow"><div class="t">${esc(u.name)} <span class="pill wait">${u.empType === "daily" ? "일용직" : "정규직"}</span></div>
+          <div class="s">${esc(u.dept || "-")} ${esc(u.position || "")} · ${esc(u.phone || "")} · 신청 ${u.appliedAt ? fmtDate(u.appliedAt) : "-"}</div></div>
+          <span style="font-size:12.5px;color:var(--navy);font-weight:700">상세 확인 ›</span>
+        </button>`).join("")}
+    </div>` : ""}
+    <div class="toolbar"><h3>사원 ${act.length}명</h3><button class="btn small" id="btnEmpAdd">＋ 사원 등록</button></div>
+    <input id="empSearch" placeholder="🔍 이름/사번/부서 검색" value="${esc(empQ)}" style="margin-bottom:10px">
+    <div class="card" style="padding:6px 14px">
+      ${shown.map(u => `
+        <button class="list-row" data-emp="${u.id}">
+          <span class="avatar">${esc(u.name[0])}</span>
+          <div class="grow"><div class="t">${esc(u.name)} ${esc(u.position)} ${u.role === "admin" ? `<span class="pill ing">관리자</span>` : ""}</div>
+          <div class="s">${esc(u.id)} · ${esc(u.dept)} · ${u.empType === "daily" ? `일용직 · 일당 ${F(u.dailyWage)}원` : `기본급 ${F(u.salaryBase)}원`}</div></div>
+        </button>`).join("")}
+    </div>`;
+  $("#btnEmpAdd").onclick = () => openEmpForm();
+  $("#empSearch").addEventListener("input", e => { empQ = e.target.value.trim(); clearTimeout(window._eq); window._eq = setTimeout(renderAdminEmp, 250); });
+  $("#adminBody").querySelectorAll("[data-udetail]").forEach(b => b.onclick = () => openApproveDetail(b.dataset.udetail));
+  $("#adminBody").querySelectorAll("[data-emp]").forEach(b => b.onclick = () => openEmpForm(b.dataset.emp));
+}
+async function openEmpForm(id) {
+  const u = id ? await DB.get("users", id) : null;
+  openModal(`
+    <h3>${u ? "사원 정보 수정" : "사원 등록"}</h3>
+    <label>사번</label><input id="efId" value="${u ? esc(u.id) : ""}" ${u ? "disabled" : ""} inputmode="numeric">
+    <label>이름</label><input id="efName" value="${u ? esc(u.name) : ""}">
+    <div class="row2">
+      <div><label>부서</label><input id="efDept" value="${u ? esc(u.dept) : ""}" placeholder="예: 하우스팀"></div>
+      <div><label>직급</label><input id="efPos" value="${u ? esc(u.position) : ""}" placeholder="예: 사원"></div>
+    </div>
+    <div class="row2">
+      <div><label>고용형태</label><select id="efType"><option value="regular" ${!u || u.empType !== "daily" ? "selected" : ""}>정규직(월급)</option><option value="daily" ${u && u.empType === "daily" ? "selected" : ""}>일용직(일당)</option></select></div>
+      <div><label>권한</label><select id="efRole"><option value="user" ${u && u.role === "user" ? "selected" : ""}>일반</option><option value="admin" ${u && u.role === "admin" ? "selected" : ""}>관리자</option></select></div>
+    </div>
+    <div class="row2">
+      <div id="efSalWrap"><label>기본급(월)</label><input id="efSal" inputmode="numeric" value="${u ? u.salaryBase : 2500000}"></div>
+      <div id="efDailyWrap"><label>일당</label><input id="efDaily" inputmode="numeric" value="${u && u.dailyWage ? u.dailyWage : 100000}"></div>
+    </div>
+    <div id="efLeaveWrap"><label>연차 부여일수(년)</label><input id="efLeave" inputmode="numeric" value="${u && u.annualLeave != null ? u.annualLeave : 15}"></div>
+    <div class="row2">
+      <div><label>연락처</label><input id="efPhone" value="${u ? esc(u.phone || "") : ""}" inputmode="tel"></div>
+      <div><label>주민등록번호</label><input id="efRrn" value="${u && u.rrn ? esc(u.rrn.slice(0, 6)) + "-•••••••" : ""}" placeholder="000000-0000000"></div>
+    </div>
+    <div class="row2">
+      <div><label>급여 입금 은행</label><input id="efBank" value="${u ? esc(u.bank || "") : ""}"></div>
+      <div><label>계좌번호</label><input id="efAcct" value="${u ? esc(u.account || "") : ""}" inputmode="numeric"></div>
+    </div>
+    <label>비밀번호 ${u ? "(변경 시에만 입력)" : ""}</label><input id="efPw" type="password" placeholder="${u ? "변경하지 않으려면 비워두세요" : "초기 비밀번호"}">
+    <div style="display:flex;gap:8px;margin-top:16px">
+      ${u && u.id !== ME.id ? `<button class="btn danger" id="efDel">삭제</button>` : ""}
+      <button class="btn ghost" id="efCancel">취소</button>
+      <button class="btn" id="efSave">저장</button>
+    </div>`);
+  const syncType = () => {
+    const daily = $("#efType").value === "daily";
+    $("#efSalWrap").classList.toggle("hidden", daily);
+    $("#efDailyWrap").classList.toggle("hidden", !daily);
+    $("#efLeaveWrap").classList.toggle("hidden", daily);
+  };
+  syncType(); $("#efType").onchange = syncType;
+  $("#efCancel").onclick = closeModal;
+  const del = $("#efDel");
+  if (del) del.onclick = async () => { await DB.del("users", id); closeModal(); toast("삭제했습니다"); renderAdminEmp(); };
+  $("#efSave").onclick = async () => {
+    const nid = $("#efId").value.trim(), name = $("#efName").value.trim();
+    if (!nid || !name) return toast("사번과 이름을 입력하세요");
+    if (!u && await DB.get("users", nid)) return toast("이미 존재하는 사번입니다");
+    const rec = u || { id: nid };
+    rec.name = name; rec.dept = $("#efDept").value.trim(); rec.position = $("#efPos").value.trim();
+    rec.empType = $("#efType").value;
+    rec.salaryBase = rec.empType === "daily" ? 0 : (Number($("#efSal").value) || 0);
+    rec.dailyWage = rec.empType === "daily" ? (Number($("#efDaily").value) || 0) : 0;
+    rec.role = $("#efRole").value;
+    rec.annualLeave = rec.empType === "daily" ? 0 : (Number($("#efLeave").value) || 15);
+    rec.phone = $("#efPhone").value.trim();
+    rec.bank = $("#efBank").value.trim(); rec.account = $("#efAcct").value.trim();
+    const rrnIn = $("#efRrn").value.trim();
+    if (rrnIn && !rrnIn.includes("•")) rec.rrn = rrnIn;   // 마스킹 표시값은 무시, 새 입력만 반영
+    rec.status = rec.status || "active";
+    rec.joinDate = rec.joinDate || CORE.dateStr(new Date());
+    const pw = $("#efPw").value;
+    if (pw) rec.pwHash = await sha256(pw);
+    else if (!u) return toast("초기 비밀번호를 입력하세요");
+    await DB.put("users", rec);
+    USERS = await DB.all("users");
+    closeModal(); toast("저장했습니다"); renderAdminEmp();
+  };
+}
+async function renderAdminPay() {
+  USERS = await DB.all("users");
+  const ym = CORE.monthStr(new Date());
+  const allPays = await DB.all("payroll");
+  const monthPays = allPays.filter(p => p.ym === ym);
+  $("#adminBody").innerHTML = `
+    <div class="card">
+      <h3>월 급여 일괄 계산 <span style="font-size:12px;color:var(--sub);font-weight:600">근태 연동 · 초과수당 자동</span></h3>
+      <div style="font-size:12.5px;color:var(--sub);margin-top:4px">통상시급(기본급÷209h)×1.5×초과시간을 자동 반영해 전 사원 명세서를 발급합니다. 이미 발급된 사원은 건너뜁니다.</div>
+      <div class="row2" style="margin-top:8px;align-items:end">
+        <div><label style="margin-top:0">귀속 연월</label><input type="month" id="bpYm" value="${ym}"></div>
+        <div><label style="margin-top:0">공통 제수당</label><input id="bpAllow" inputmode="numeric" value="200000"></div>
+      </div>
+      <button class="btn" id="bpRun">전 사원 일괄 계산·발급</button>
+      <div id="bpResult" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h3>성과급 지급</h3>
+      <div class="row2" style="margin-top:8px;align-items:end">
+        <div><label style="margin-top:0">귀속 연월</label><input type="month" id="bnYm" value="${ym}"></div>
+        <div><label style="margin-top:0">지급 기준</label>
+          <select id="bnMode"><option value="0.5">기본급의 50%</option><option value="1">기본급의 100%</option><option value="fix">정액 입력</option></select></div>
+      </div>
+      <div id="bnFixWrap" class="hidden"><label>정액(1인당)</label><input id="bnFix" inputmode="numeric" value="1000000"></div>
+      <div style="font-size:12px;color:var(--sub);margin-top:6px">비율 지급 시 일용직(기본급 0원)은 제외됩니다. 일용직 포함은 정액을 사용하세요.</div>
+      <button class="btn" id="bnRun">전 사원 성과급 지급</button>
+      <div id="bnResult" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h3>개별 등록 (수동)</h3>
+      <label>귀속 연월</label><input type="month" id="apYm" value="${ym}">
+      <label>대상 사원</label>
+      <select id="apUser">${USERS.map(u => `<option value="${u.id}">${esc(u.name)} ${esc(u.position)} · 기본급 ${F(u.salaryBase)}</option>`).join("")}</select>
+      <div class="row2">
+        <div><label>제수당</label><input id="apAllow" inputmode="numeric" value="200000"></div>
+        <div><label>연장근로수당</label><input id="apOt" inputmode="numeric" value="0"></div>
+      </div>
+      <div id="apPreview" style="margin-top:12px;font-size:13.5px;color:var(--sub)"></div>
+      <button class="btn" id="apSave">계산 후 등록</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>${ym} 발급 현황</h3><button class="btn small" id="btnSlipXlsx">📥 명세서 엑셀 생성 (1인 1시트)</button></div>
+      ${monthPays.length ? `<div class="table-wrap"><table class="grid"><tr><th>구분</th><th>사원</th><th>초과</th><th>실수령</th><th>확인</th></tr>
+        ${monthPays.map(p => `<tr><td>${p.kind === "bonus" ? "성과급" : p.empType === "daily" ? "일용직" : "급여"}</td><td>${esc(p.userName)}</td><td>${p.otMin ? CORE.minToHM(p.otMin) : "-"}</td><td class="r"><b>${F(p.net)}</b></td>
+          <td>${p.finalConfirmedAt ? `<span class="pill ok">최종✓</span>` : p.workConfirmedAt ? `<span class="pill ing">근무✓</span>` : `<span class="pill wait">대기</span>`}</td></tr>`).join("")}</table></div>`
+      : `<div class="empty">이번 달 발급 내역이 없습니다.</div>`}
+    </div>`;
+  $("#btnSlipXlsx").onclick = async () => {
+    const ymv = $("#bpYm").value || ym;
+    const pays = (await DB.all("payroll")).filter(p => p.ym === ymv);
+    if (!pays.length) return toast("해당 월 발급 내역이 없습니다");
+    if (!await ensureXLSX()) return toast("엑셀 라이브러리 로드 실패 (인터넷 연결 확인)");
+    const wb = XLSX.utils.book_new();
+    for (const p of pays) {
+      const u = await DB.get("users", p.userId);
+      const ws = XLSX.utils.aoa_to_sheet(buildSlipAoa(p, u));
+      ws["!cols"] = [{ wch: 16 }, { wch: 22 }, { wch: 10 }, { wch: 14 }, { wch: 12 }];
+      const nm = `${p.userName}(${p.userId})${p.kind === "bonus" ? "_성과급" : ""}`.slice(0, 30);
+      XLSX.utils.book_append_sheet(wb, ws, nm);
+    }
+    XLSX.writeFile(wb, `급여명세서_${ymv}.xlsx`);
+    SVC.log(ME, "명세서엑셀생성", `${ymv} ${pays.length}건`);
+    toast(`${pays.length}건 명세서 엑셀 생성`);
+  };
+  $("#bpRun").onclick = async () => {
+    const ymv = $("#bpYm").value; if (!ymv) return toast("연월을 선택하세요");
+    const rs = await SVC.runMonthlyPayroll(ymv, { allowance: Number($("#bpAllow").value) || 0, actor: ME });
+    const done = rs.filter(r => !r.skipped), skip = rs.filter(r => r.skipped);
+    $("#bpResult").innerHTML = `<div style="font-size:13px"><b>${done.length}건 발급</b>${skip.length ? ` · ${skip.length}건 기발급 건너뜀` : ""}<br>${done.map(r => `${esc(r.name)}${r.empType === "daily" ? " (일용직)" : ""}: 초과 ${CORE.minToHM(r.otMin)} → 수당 ${F(r.overtime)}원, 실수령 ${F(r.net)}원`).join("<br>")}</div>`;
+    toast(`${ymv} 급여 ${done.length}건 발급 완료`);
+  };
+  $("#bnMode").onchange = () => $("#bnFixWrap").classList.toggle("hidden", $("#bnMode").value !== "fix");
+  $("#bnRun").onclick = async () => {
+    const ymv = $("#bnYm").value; if (!ymv) return toast("연월을 선택하세요");
+    const mode = $("#bnMode").value;
+    const entries = USERS.map(u => ({ userId: u.id, amount: mode === "fix" ? (Number($("#bnFix").value) || 0) : Math.round(u.salaryBase * Number(mode)) }));
+    const rs = await SVC.grantBonus(ymv, entries, { actor: ME });
+    const done = rs.filter(r => !r.skipped);
+    $("#bnResult").innerHTML = `<div style="font-size:13px"><b>${done.length}건 지급</b>${rs.length - done.length ? ` · ${rs.length - done.length}건 기지급 건너뜀` : ""}<br>${done.map(r => `${esc(r.name)}: 실수령 ${F(r.net)}원`).join("<br>")}</div>`;
+    toast(`성과급 ${done.length}건 지급 완료`);
+  };
+  const preview = () => {
+    const u = USERS.find(x => x.id === $("#apUser").value);
+    if (!u) return;
+    const r = CORE.calcPayroll({ base: u.salaryBase, allowance: Number($("#apAllow").value) || 0, overtime: Number($("#apOt").value) || 0 });
+    $("#apPreview").innerHTML = `지급계 <b>${F(r.gross)}</b> · 공제계 <b style="color:var(--stamp)">${F(r.totalDeduct)}</b> · 실수령 <b style="color:var(--navy)">${F(r.net)}원</b>`;
+  };
+  ["apUser", "apAllow", "apOt"].forEach(id => $("#" + id).addEventListener("input", preview));
+  preview();
+  $("#apSave").onclick = async () => {
+    const u = USERS.find(x => x.id === $("#apUser").value);
+    const ymv = $("#apYm").value;
+    if (!u || !ymv) return toast("대상과 연월을 확인하세요");
+    const dup = (await DB.all("payroll")).find(p => p.userId === u.id && p.ym === ymv && (p.kind || "salary") === "salary");
+    if (dup) return toast(`${ymv} ${u.name} 급여가 이미 등록되어 있습니다`);
+    const allowance = Number($("#apAllow").value) || 0, overtime = Number($("#apOt").value) || 0;
+    const r = CORE.calcPayroll({ base: u.salaryBase, allowance, overtime });
+    await DB.add("payroll", { kind: "salary", userId: u.id, userName: u.name, ym: ymv, base: u.salaryBase, allowance, overtime, ...r, issued: true, issuedAt: new Date().toISOString(), createdAt: new Date().toISOString() });
+    toast(`${u.name} ${ymv} 급여 등록 완료`); renderAdminPay();
+  };
+}
+let docsFilter = { status: "all", type: "all", q: "" };
+async function renderAdminDocs() {
+  let docs = (await DB.all("docs")).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const total = docs.length;
+  const cnt = st => docs.filter(d => d.status === st).length;
+  if (docsFilter.status !== "all") docs = docs.filter(d => d.status === docsFilter.status);
+  if (docsFilter.type !== "all") docs = docs.filter(d => d.type === docsFilter.type);
+  if (docsFilter.q) docs = docs.filter(d => (d.title + d.drafterName).includes(docsFilter.q));
+  $("#adminBody").innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="k">전체 문서</div><div class="v">${total}<small>건</small></div></div>
+      <div class="stat"><div class="k">진행중(미결)</div><div class="v">${cnt("진행")}<small>건</small></div></div>
+      <div class="stat"><div class="k">완료</div><div class="v">${cnt("완료")}<small>건</small></div></div>
+      <div class="stat"><div class="k">반려</div><div class="v">${cnt("반려")}<small>건</small></div></div>
+    </div>
+    <div class="card">
+      <div class="row2">
+        <div><label style="margin-top:0">상태</label>
+          <select id="dfStatus">${["all", "진행", "완료", "반려"].map(v => `<option value="${v}" ${docsFilter.status === v ? "selected" : ""}>${v === "all" ? "전체" : v}</option>`).join("")}</select></div>
+        <div><label style="margin-top:0">종류</label>
+          <select id="dfType"><option value="all">전체</option>${DOC_TYPES().map(t => `<option ${docsFilter.type === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></div>
+      </div>
+      <label>검색 (제목/기안자)</label><input id="dfQ" value="${esc(docsFilter.q)}" placeholder="검색어 입력">
+    </div>
+    <div class="card" style="padding:6px 14px">
+      ${docs.length ? docs.map(d => `
+        <div class="list-row">
+          <button class="grow" data-doc="${d.docId}" style="text-align:left">
+            <div class="t">[${esc(d.type)}] ${esc(d.title)}</div>
+            <div class="s">${esc(d.drafterName)} · ${fmtDate(d.createdAt)}</div>
+          </button>
+          ${statusPill(d.status)}
+          <button class="btn small ghost" data-edit="${d.docId}" style="padding:6px 10px">수정</button>
+          <button class="btn small danger" data-del="${d.docId}" style="padding:6px 10px">삭제</button>
+        </div>`).join("") : `<div class="empty">조건에 맞는 문서가 없습니다.</div>`}
+    </div>`;
+  $("#dfStatus").onchange = e => { docsFilter.status = e.target.value; renderAdminDocs(); };
+  $("#dfType").onchange = e => { docsFilter.type = e.target.value; renderAdminDocs(); };
+  $("#dfQ").addEventListener("change", e => { docsFilter.q = e.target.value.trim(); renderAdminDocs(); });
+  $("#adminBody").querySelectorAll("[data-doc]").forEach(b => b.onclick = () => openDocDetail(Number(b.dataset.doc)));
+  $("#adminBody").querySelectorAll("[data-edit]").forEach(b => b.onclick = async () => {
+    const d = await DB.get("docs", Number(b.dataset.edit));
+    if (!d) return;
+    openModal(`
+      <h3>문서 수정 <span style="font-size:12px;color:var(--sub);font-weight:600">관리자 · 수정 이력 기록</span></h3>
+      <label>제목</label><input id="deTitle" value="${esc(d.title)}">
+      <label>내용</label><textarea id="deBody" rows="6">${esc(d.body)}</textarea>
+      ${d.editedAt ? `<div style="font-size:12px;color:var(--sub);margin-top:6px">최근 수정: ${fmtDate(d.editedAt)} · ${esc(d.editedBy || "")}</div>` : ""}
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn ghost" id="deCancel">취소</button><button class="btn" id="deSave">저장</button>
+      </div>`);
+    $("#deCancel").onclick = closeModal;
+    $("#deSave").onclick = async () => {
+      const r = await SVC.editDoc(d.docId, { title: $("#deTitle").value.trim(), body: $("#deBody").value }, ME);
+      if (!r.ok) return toast(r.msg);
+      closeModal(); toast("수정했습니다"); renderAdminDocs();
+    };
+  });
+  $("#adminBody").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    await SVC.deleteDoc(Number(b.dataset.del), ME);
+    toast("삭제했습니다"); renderAdminDocs();
+  });
+}
+
+async function renderAdminAudit() {
+  const now = new Date();
+  const yFrom = `${now.getFullYear()}-01`, yTo = CORE.monthStr(now);
+  $("#adminBody").innerHTML = `
+    <div class="card">
+      <h3>감사 리포트 생성</h3>
+      <div class="row2" style="margin-top:8px">
+        <div><label style="margin-top:0">시작 연월</label><input type="month" id="auFrom" value="${yFrom}"></div>
+        <div><label style="margin-top:0">종료 연월</label><input type="month" id="auTo" value="${yTo}"></div>
+      </div>
+      <button class="btn" id="auRun">리포트 생성</button>
+      <div id="auReport"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>활동 로그</h3><span style="font-size:12px;color:var(--sub)">최근 30건</span></div>
+      <div id="auLog" class="table-wrap"></div>
+    </div>`;
+  $("#auRun").onclick = async () => {
+    const r = await SVC.buildAudit($("#auFrom").value, $("#auTo").value);
+    $("#auReport").innerHTML = `
+      <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <b>감사 리포트 · ${esc(r.period)}</b>
+        <div class="table-wrap" style="margin-top:8px"><table class="grid">
+          <tr><th colspan="4">전자결재</th></tr>
+          <tr><td>총 ${r.docs.total}건</td><td>완료 ${r.docs.done}</td><td>반려 ${r.docs.rejected}</td><td>미결 ${r.docs.pending}${r.docs.stalePending ? ` <b style="color:var(--stamp)">(3일 초과 ${r.docs.stalePending})</b>` : ""}</td></tr>
+          <tr><td colspan="4">평균 결재 소요 ${r.docs.avgApprovalDays}일</td></tr>
+          <tr><th colspan="4">근태</th></tr>
+          <tr><td colspan="2">기록 ${r.attendance.records}건 · 총 ${F(r.attendance.totalHours)}시간</td><td colspan="2">지각 ${r.attendance.lateN}회 (${r.attendance.lateRate}%)</td></tr>
+          <tr><th colspan="4">급여</th></tr>
+          <tr><td colspan="2">발급 ${r.payroll.count}건 (성과급 ${r.payroll.bonusCount})</td><td colspan="2">지급총액 ${F(r.payroll.gross)}원</td></tr>
+          <tr><td colspan="2">공제총액 ${F(r.payroll.deduct)}원</td><td colspan="2">실지급 ${F(r.payroll.net)}원</td></tr>
+        </table></div>
+        <div style="margin-top:10px;font-size:13.5px">
+          ${r.violations.length
+            ? `<span class="pill no">무결성 위반 ${r.violations.length}건</span><div class="comment-log">${r.violations.map(v => `<div class="c">${esc(v)}</div>`).join("")}</div>`
+            : `<span class="pill ok">무결성 검사 통과 · 위반 0건</span>`}
+        </div>
+      </div>`;
+    SVC.log(ME, "감사리포트", r.period);
+  };
+  const logs = (await DB.all("auditlog")).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 30);
+  $("#auLog").innerHTML = logs.length ? `<table class="grid"><tr><th>시각</th><th>사용자</th><th>동작</th><th>내용</th></tr>
+    ${logs.map(l => `<tr><td>${fmtDate(l.ts)}</td><td>${esc(l.userName)}</td><td>${esc(l.action)}</td><td class="l">${esc(l.detail)}</td></tr>`).join("")}</table>`
+    : `<div class="empty">기록이 없습니다.</div>`;
+}
+
+function openDocTypeForm(idx) {
+  const t = idx != null ? CFG.docTypes[idx] : null;
+  openModal(`
+    <h3>${t ? "결재 양식 편집" : "결재 종류 추가"}</h3>
+    <label>종류 이름</label><input id="dtName" value="${t ? esc(t.name) : ""}" placeholder="예: 출장신청">
+    <label>기본 양식 (본문 템플릿)</label>
+    <textarea id="dtTpl" rows="6" placeholder="예)\n1. 출장지 :\n2. 기간 :\n3. 목적 :">${t ? esc(t.template || "") : ""}</textarea>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn ghost" id="dtCancel">취소</button><button class="btn" id="dtSave">저장</button>
+    </div>`);
+  $("#dtCancel").onclick = closeModal;
+  $("#dtSave").onclick = async () => {
+    const name = $("#dtName").value.trim();
+    if (!name) return toast("이름을 입력하세요");
+    if (CFG.docTypes.some((x, i) => x.name === name && i !== idx)) return toast("같은 이름의 종류가 있습니다");
+    const rec = { name, template: $("#dtTpl").value };
+    if (idx != null) CFG.docTypes[idx] = rec; else CFG.docTypes.push(rec);
+    await saveCFG("docTypes"); SVC.log(ME, idx != null ? "양식수정" : "양식추가", name);
+    closeModal(); toast("저장했습니다"); renderAdminCfg();
+  };
+}
+
+async function renderAdminCfg() {
+  $("#adminBody").innerHTML = `
+    <div class="card">
+      <h3>근무시간 설정</h3>
+      <div class="row2">
+        <div><label>출근 기준</label><input type="time" id="cwStart" value="${esc(CFG.work.start)}"></div>
+        <div><label>퇴근 기준</label><input type="time" id="cwEnd" value="${esc(CFG.work.end)}"></div>
+      </div>
+      <label>휴게시간(분)</label><input id="cwBreak" inputmode="numeric" value="${CFG.work.breakMin}">
+      <button class="btn" id="cwSave">근무시간 저장</button>
+    </div>
+    <div class="card">
+      <h3>급여 설정 (정규직)</h3>
+      <div class="row2">
+        <div><label>기본 제수당</label><input id="cpAllow" inputmode="numeric" value="${CFG.pay.allowanceDefault}"></div>
+        <div><label>식대 비과세</label><input id="cpMeal" inputmode="numeric" value="${CFG.pay.mealTaxFree}"></div>
+      </div>
+      <div class="row2">
+        <div><label>초과근무 배율</label><input id="cpOt" inputmode="decimal" value="${CFG.pay.otMult}"></div>
+        <div><label>월 통상근로시간</label><input id="cpMh" inputmode="numeric" value="${CFG.pay.monthHours}"></div>
+      </div>
+      <div class="row2">
+        <div><label>국민연금 %</label><input id="cpPen" inputmode="decimal" value="${CFG.pay.pensionPct}"></div>
+        <div><label>건강보험 %</label><input id="cpHel" inputmode="decimal" value="${CFG.pay.healthPct}"></div>
+      </div>
+      <div class="row2">
+        <div><label>장기요양 %(건보 대비)</label><input id="cpCare" inputmode="decimal" value="${CFG.pay.carePct}"></div>
+        <div><label>고용보험 %</label><input id="cpEmp" inputmode="decimal" value="${CFG.pay.employPct}"></div>
+      </div>
+      <label>국민연금 기준소득 상한</label><input id="cpCap" inputmode="numeric" value="${CFG.pay.npCap}">
+      <button class="btn" id="cpSave">급여 설정 저장</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>일용직 설정</h3><button class="btn small ghost" id="cdGuide">📖 법정수당 가이드</button></div>
+      <div class="row2">
+        <div><label style="margin-top:0">일 비과세 한도</label><input id="cdFree" inputmode="numeric" value="${CFG.daily.taxFree}"></div>
+        <div><label style="margin-top:0">고용보험 %</label><input id="cdEmp" inputmode="decimal" value="${CFG.daily.employPct}"></div>
+      </div>
+      <label>일괄 계산에 적용할 법정수당 (근무시간 기반 자동 산정)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13.5px">
+        <label style="display:flex;gap:7px;align-items:center;margin:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="cdOt" style="width:auto" ${CFG.daily.otOn !== false ? "checked" : ""}>연장수당 (1일 초과분 ×배율)</label>
+        <label style="display:flex;gap:7px;align-items:center;margin:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="cdNight" style="width:auto" ${CFG.daily.nightOn !== false ? "checked" : ""}>야간수당 (22시~ ×0.5 가산)</label>
+        <label style="display:flex;gap:7px;align-items:center;margin:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="cdJuhyu" style="width:auto" ${CFG.daily.juhyuOn !== false ? "checked" : ""}>주휴수당 (주 15시간↑)</label>
+        <label style="display:flex;gap:7px;align-items:center;margin:0;font-weight:500;color:var(--ink)"><input type="checkbox" id="cdHoliday" style="width:auto" ${CFG.daily.holidayOn !== false ? "checked" : ""}>휴일수당 (일요일 ×0.5 가산)</label>
+      </div>
+      <label style="display:flex;gap:7px;align-items:center;font-weight:500;color:var(--ink)"><input type="checkbox" id="cdIns" style="width:auto" ${CFG.daily.autoInsure !== false ? "checked" : ""}>4대보험 자동 적용 — 월
+        <input id="cdInsDays" inputmode="numeric" value="${CFG.daily.insureMinDays ?? 8}" style="width:52px;padding:5px 8px;text-align:center">일 이상 근무 시 국민연금·건강보험 공제</label>
+      <button class="btn" id="cdSave">일용직 설정 저장</button>
+    </div>
+    <div class="card">
+      <h3>출퇴근 허용 IP</h3>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:var(--ink)">
+        <input type="checkbox" id="ciEnable" style="width:auto" ${CFG.attendIp.enabled ? "checked" : ""}> 허용 IP에서만 출퇴근 체크 가능
+      </label>
+      <label>허용 IP 목록 (쉼표 구분 · 앞자리만 쓰면 대역 허용, 예: 121.140.)</label>
+      <input id="ciList" value="${esc((CFG.attendIp.list || []).join(", "))}" placeholder="예: 121.140.12.34, 210.98.">
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn small ghost" id="ciMyIp" style="flex:none">현재 내 IP 확인</button>
+        <button class="btn small" id="ciSave" style="flex:none">저장</button>
+        <span id="ciIpShow" style="font-size:13px;color:var(--sub);align-self:center"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>급여 산정 기준</h3>
+      <label>월 급여 일괄 계산 시 근무일·초과시간 산출 기준</label>
+      <select id="cbBasis">
+        <option value="attendance" ${CFG.payBasis !== "schedule" ? "selected" : ""}>근태기록 (출퇴근 체크)</option>
+        <option value="schedule" ${CFG.payBasis === "schedule" ? "selected" : ""}>근무스케줄 (확정 근무만)</option>
+      </select>
+      <div style="font-size:12px;color:var(--sub);margin-top:6px">일용직 다수 운영 시 '근무스케줄' 기준을 권장합니다 — 관리자가 확정한 근무만 급여에 반영됩니다.</div>
+      <button class="btn" id="cbBasisSave">기준 저장</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>급여 항목 관리 (수당/공제 추가·삭제)</h3></div>
+      ${(CFG.payItems || []).length ? CFG.payItems.map((it, i) => `
+        <div class="list-row">
+          <div class="grow"><div class="t">${esc(it.name)} <span class="pill ${it.type === "공제" ? "no" : "ok"}">${esc(it.type)}</span></div>
+          <div class="s">${F(it.amount)}원 · 대상: ${it.target === "all" ? "전체" : it.target === "daily" ? "일용직" : "정규직"}</div></div>
+          <button class="btn small danger" data-idel="${i}" style="padding:4px 8px">삭제</button>
+        </div>`).join("") : `<div style="font-size:13px;color:var(--sub)">등록된 항목이 없습니다. 예: 식대(비과세), 교통비, 상조회비(공제)</div>`}
+      <div class="row2" style="margin-top:10px">
+        <div><label style="margin-top:0">항목명</label><input id="piName" placeholder="예: 교통비"></div>
+        <div><label style="margin-top:0">금액(월)</label><input id="piAmt" inputmode="numeric" value="100000"></div>
+      </div>
+      <div class="row2">
+        <div><label>유형</label><select id="piType"><option>수당(과세)</option><option>수당(비과세)</option><option>공제</option></select></div>
+        <div><label>대상</label><select id="piTarget"><option value="all">전체</option><option value="regular">정규직</option><option value="daily">일용직</option></select></div>
+      </div>
+      <button class="btn" id="piAdd">항목 추가</button>
+      <div style="font-size:12px;color:var(--sub);margin-top:6px">다음 급여 일괄 계산부터 자동 반영되며, 명세서에 기타수당/기타공제로 표시됩니다.</div>
+    </div>
+    <div class="card">
+      <h3>4대보험 계산기 <span style="font-size:12px;color:var(--sub);font-weight:600">근로자·사업주 부담 동시 산출</span></h3>
+      <label>월 보수액(과세 기준)</label><input id="insSal" inputmode="numeric" value="3000000">
+      <div class="row2">
+        <div><label>산재보험율(사업주) %</label><input id="insWc" inputmode="decimal" value="1.0"></div>
+        <div><label>고용안정·직능(사업주) %</label><input id="insEs" inputmode="decimal" value="0.25"></div>
+      </div>
+      <button class="btn" id="insRun">계산</button>
+      <div id="insOut" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>결재 양식 관리</h3><button class="btn small" id="dtAdd">＋ 종류 추가</button></div>
+      ${(CFG.docTypes || []).map((t, i) => `
+        <div class="list-row">
+          <div class="grow"><div class="t">${esc(t.name)}</div>
+          <div class="s" style="white-space:pre-wrap">${esc((t.template || "").slice(0, 60))}${(t.template || "").length > 60 ? "…" : ""}</div></div>
+          <button class="btn small ghost" data-dtedit="${i}" style="padding:4px 8px">양식 편집</button>
+          <button class="btn small danger" data-dtdel="${i}" style="padding:4px 8px">삭제</button>
+        </div>`).join("")}
+      <div style="font-size:12px;color:var(--sub);margin-top:6px">기안 작성 시 종류를 고르면 양식이 본문에 자동 삽입됩니다. 이름에 '휴가'/'근무'가 들어가면 기간·구분 입력란이 함께 표시됩니다.</div>
+    </div>
+    <div class="card">
+      <h3>급여 지침</h3>
+      <div style="font-size:12px;color:var(--sub)">사원 급여 화면 하단에 표시됩니다.</div>
+      <textarea id="cgPolicy" rows="4" style="margin-top:8px">${esc(CFG.payPolicy)}</textarea>
+      <button class="btn" id="cgSave">지침 저장</button>
+    </div>
+    <div class="card">
+      <h3>가입 페이지 설정</h3>
+      <label>부서(팀) 목록 <span style="font-weight:400">— 쉼표로 구분, 가입 시 선택지로 표시</span></label>
+      <input id="sgDepts" value="${esc((CFG.signup.depts || []).join(", "))}">
+      <label>직급 목록</label>
+      <input id="sgPos" value="${esc((CFG.signup.positions || []).join(", "))}">
+      <label>가입 안내문</label>
+      <textarea id="sgNotice" rows="3">${esc(CFG.signup.notice || "")}</textarea>
+      <button class="btn" id="sgSave">가입 설정 저장</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>게시판 관리</h3><button class="btn small" id="cbAdd">＋ 게시판 추가</button></div>
+      ${CFG.boards.map((b, i) => `
+        <div class="list-row">
+          <div class="grow"><div class="t">${esc(b.name)}</div><div class="s">쓰기 권한: ${b.write === "admin" ? "관리자만 🔒" : "전체 사원"}</div></div>
+          <button class="btn small ghost" data-perm="${i}" style="padding:6px 10px">권한 전환</button>
+          <button class="btn small danger" data-bdel="${i}" style="padding:6px 10px">삭제</button>
+        </div>`).join("")}
+    </div>
+    <div class="card">
+      <h3>데이터 백업</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn small ghost" id="cbExport">전체 내보내기 (JSON)</button>
+        <label class="btn small ghost" style="margin:0">가져오기<input type="file" id="cbImport" accept=".json" class="hidden"></label>
+        <button class="btn small danger" id="cbReset">전체 초기화</button>
+      </div>
+      <div style="font-size:12px;color:var(--sub);margin-top:8px">가져오기는 기존 데이터를 덮어씁니다. 초기화 후에는 샘플 데이터로 재시작합니다.</div>
+    </div>`;
+  $("#cwSave").onclick = async () => {
+    CFG.work = { start: $("#cwStart").value || "09:00", end: $("#cwEnd").value || "18:00", breakMin: Number($("#cwBreak").value) || 60 };
+    await saveCFG("work"); SVC.log(ME, "설정변경", `근무시간 ${CFG.work.start}~${CFG.work.end}`);
+    toast("근무시간을 저장했습니다");
+  };
+  $("#cpSave").onclick = async () => {
+    CFG.pay = { allowanceDefault: Number($("#cpAllow").value) || 0, mealTaxFree: Number($("#cpMeal").value) || 0,
+      otMult: Number($("#cpOt").value) || 1.5, monthHours: Number($("#cpMh").value) || 209,
+      pensionPct: Number($("#cpPen").value) || 0, healthPct: Number($("#cpHel").value) || 0,
+      carePct: Number($("#cpCare").value) || 0, employPct: Number($("#cpEmp").value) || 0,
+      npCap: Number($("#cpCap").value) || 6370000 };
+    await saveCFG("pay"); SVC.log(ME, "설정변경", "급여 요율/기준");
+    toast("급여 설정을 저장했습니다");
+  };
+  $("#cdSave").onclick = async () => {
+    CFG.daily = { taxFree: Number($("#cdFree").value) || 0, employPct: Number($("#cdEmp").value) || 0,
+      otOn: $("#cdOt").checked, nightOn: $("#cdNight").checked, juhyuOn: $("#cdJuhyu").checked, holidayOn: $("#cdHoliday").checked,
+      autoInsure: $("#cdIns").checked, insureMinDays: Number($("#cdInsDays").value) || 8 };
+    await saveCFG("daily"); SVC.log(ME, "설정변경", "일용직 수당/보험 기준");
+    toast("일용직 설정을 저장했습니다 (다음 일괄 계산부터 적용)");
+  };
+  $("#cdGuide").onclick = () => openModal(`
+    <h3>📖 일용직 법정수당 가이드</h3>
+    <div style="font-size:13.5px;line-height:1.7;margin-top:8px">
+      <b>1. 주휴수당</b> — 1주 소정근로 15시간 이상 + 개근 시, (주간근로 ÷ 40h) × 8시간분 지급 (최대 8시간). 결재온은 주별 근무시간을 자동 집계해 적용합니다.<br><br>
+      <b>2. 연장근로수당</b> — 1일 소정근로(현재 ${Math.round(SVC.stdDayMin() / 60 * 10) / 10}시간) 초과분 × ${CFG.pay.otMult}배.<br><br>
+      <b>3. 야간근로수당</b> — 22:00~06:00 근무분 × 0.5배 <u>가산</u> (기본분은 일당에 포함).<br><br>
+      <b>4. 휴일근로수당</b> — 주휴일(일요일 기준) 근무분 × 0.5배 가산. 8시간 초과 시 실제로는 추가 가산이 필요할 수 있습니다.<br><br>
+      <b>5. 4대보험</b> — 고용·산재는 당연 적용. <b>국민연금·건강보험은 1개월 이상 근무 + 월 ${CFG.daily.insureMinDays ?? 8}일 이상</b> 근무 시 가입 의무 → 결재온이 월 근무일수로 자동 판정해 공제합니다.<br><br>
+      <b>6. 일용근로소득세</b> — (일당 − ${F(CFG.daily.taxFree)}원) × 6% × 45% = 2.7%. 일별 1,000원 미만은 소액부징수로 0원.<br><br>
+      <span style="color:var(--sub);font-size:12px">※ 법정 기준의 요약이며, 실제 신고 시 세무·노무 전문가 확인을 권장합니다.</span>
+    </div>
+    <button class="btn ghost" id="gdClose" style="margin-top:12px">닫기</button>`) || ($("#gdClose").onclick = closeModal);
+  $("#ciMyIp").onclick = async () => {
+    $("#ciIpShow").textContent = "확인 중…";
+    const ip = await SVC.getClientIp();
+    $("#ciIpShow").textContent = ip ? `내 IP: ${ip}` : "IP 확인 실패 (네트워크 확인)";
+    if (ip && !$("#ciList").value.includes(ip)) $("#ciList").value = ($("#ciList").value ? $("#ciList").value + ", " : "") + ip;
+  };
+  $("#ciSave").onclick = async () => {
+    CFG.attendIp = { enabled: $("#ciEnable").checked, list: $("#ciList").value.split(",").map(x => x.trim()).filter(Boolean) };
+    await saveCFG("attendIp"); SVC.log(ME, "설정변경", `출퇴근 IP ${CFG.attendIp.enabled ? "제한 ON" : "제한 OFF"} (${CFG.attendIp.list.length}개)`);
+    toast("출퇴근 IP 설정을 저장했습니다");
+  };
+  $("#cbBasisSave").onclick = async () => {
+    CFG.payBasis = $("#cbBasis").value;
+    await saveCFG("payBasis"); SVC.log(ME, "설정변경", `급여 산정 기준 → ${CFG.payBasis === "schedule" ? "근무스케줄" : "근태기록"}`);
+    toast("급여 산정 기준을 저장했습니다");
+  };
+  $("#piAdd").onclick = async () => {
+    const name = $("#piName").value.trim();
+    const amount = Number($("#piAmt").value) || 0;
+    if (!name || amount <= 0) return toast("항목명과 금액을 확인하세요");
+    CFG.payItems = (CFG.payItems || []).concat([{ name, amount, type: $("#piType").value, target: $("#piTarget").value }]);
+    await saveCFG("payItems"); SVC.log(ME, "급여항목추가", `${name} ${$("#piType").value} ${F(amount)}`);
+    toast("항목을 추가했습니다"); renderAdminCfg();
+  };
+  $("#adminBody").querySelectorAll("[data-idel]").forEach(b => b.onclick = async () => {
+    const it = CFG.payItems[Number(b.dataset.idel)];
+    CFG.payItems.splice(Number(b.dataset.idel), 1);
+    await saveCFG("payItems"); SVC.log(ME, "급여항목삭제", it ? it.name : "");
+    toast("삭제했습니다"); renderAdminCfg();
+  });
+  $("#insRun").onclick = () => {
+    const sal = Number($("#insSal").value) || 0;
+    const f10 = n => Math.floor(Math.round(n) / 10) * 10;
+    const npB = Math.min(sal, Number(CFG.pay.npCap));
+    const wPen = f10(npB * CFG.pay.pensionPct / 100),   ePen = wPen;
+    const wHel = f10(sal * CFG.pay.healthPct / 100),    eHel = wHel;
+    const wCare = f10(wHel * CFG.pay.carePct / 100),    eCare = wCare;
+    const wEmp = f10(sal * CFG.pay.employPct / 100);
+    const eEmp = f10(sal * (CFG.pay.employPct + (Number($("#insEs").value) || 0)) / 100);
+    const eWc  = f10(sal * (Number($("#insWc").value) || 0) / 100);
+    const wSum = wPen + wHel + wCare + wEmp, eSum = ePen + eHel + eCare + eEmp + eWc;
+    $("#insOut").innerHTML = `<div class="table-wrap"><table class="grid">
+      <tr><th>구분</th><th>근로자 부담</th><th>사업주 부담</th></tr>
+      <tr><td class="l">국민연금 (${CFG.pay.pensionPct}%)</td><td class="r">${F(wPen)}</td><td class="r">${F(ePen)}</td></tr>
+      <tr><td class="l">건강보험 (${CFG.pay.healthPct}%)</td><td class="r">${F(wHel)}</td><td class="r">${F(eHel)}</td></tr>
+      <tr><td class="l">장기요양 (건보의 ${CFG.pay.carePct}%)</td><td class="r">${F(wCare)}</td><td class="r">${F(eCare)}</td></tr>
+      <tr><td class="l">고용보험</td><td class="r">${F(wEmp)}</td><td class="r">${F(eEmp)}</td></tr>
+      <tr><td class="l">산재보험</td><td class="r">-</td><td class="r">${F(eWc)}</td></tr>
+      <tr><td class="l"><b>합계</b></td><td class="r"><b>${F(wSum)}</b></td><td class="r"><b>${F(eSum)}</b></td></tr>
+      <tr><td class="l">총 인건비 부대비용</td><td class="r" colspan="2"><b>${F(wSum + eSum)}원</b> (보수액의 ${sal ? Math.round((wSum + eSum) / sal * 1000) / 10 : 0}%)</td></tr>
+    </table></div>
+    <div style="font-size:12px;color:var(--sub);margin-top:6px">설정 탭의 요율을 그대로 사용한 참고용 계산입니다 (국민건강보험 4대보험 계산기 방식).</div>`;
+  };
+  $("#dtAdd").onclick = () => openDocTypeForm();
+  $("#adminBody").querySelectorAll("[data-dtedit]").forEach(b => b.onclick = () => openDocTypeForm(Number(b.dataset.dtedit)));
+  $("#adminBody").querySelectorAll("[data-dtdel]").forEach(b => b.onclick = async () => {
+    if ((CFG.docTypes || []).length <= 1) return toast("최소 1개 양식은 유지해야 합니다");
+    const t = CFG.docTypes[Number(b.dataset.dtdel)];
+    CFG.docTypes.splice(Number(b.dataset.dtdel), 1);
+    await saveCFG("docTypes"); SVC.log(ME, "양식삭제", t.name);
+    toast("삭제했습니다"); renderAdminCfg();
+  });
+  $("#cgSave").onclick = async () => {
+    CFG.payPolicy = $("#cgPolicy").value;
+    await saveCFG("payPolicy"); SVC.log(ME, "설정변경", "급여 지침");
+    toast("지침을 저장했습니다");
+  };
+  $("#sgSave").onclick = async () => {
+    CFG.signup = {
+      depts: $("#sgDepts").value.split(",").map(x => x.trim()).filter(Boolean),
+      positions: $("#sgPos").value.split(",").map(x => x.trim()).filter(Boolean),
+      notice: $("#sgNotice").value,
+    };
+    await saveCFG("signup"); SVC.log(ME, "설정변경", "가입 페이지");
+    toast("가입 페이지 설정을 저장했습니다");
+  };
+  $("#cbAdd").onclick = () => {
+    openModal(`
+      <h3>게시판 추가</h3>
+      <label>게시판 이름</label><input id="nbName" placeholder="예: 업무자료실">
+      <label>쓰기 권한</label><select id="nbWrite"><option value="all">전체 사원</option><option value="admin">관리자만</option></select>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn ghost" id="nbCancel">취소</button><button class="btn" id="nbSave">추가</button>
+      </div>`);
+    $("#nbCancel").onclick = closeModal;
+    $("#nbSave").onclick = async () => {
+      const name = $("#nbName").value.trim();
+      if (!name) return toast("이름을 입력하세요");
+      const key = "b" + Date.now();
+      CFG.boards.push({ key, name, write: $("#nbWrite").value });
+      await saveCFG("boards"); SVC.log(ME, "게시판추가", name);
+      closeModal(); toast("게시판을 추가했습니다"); renderAdminCfg();
+    };
+  };
+  $("#adminBody").querySelectorAll("[data-perm]").forEach(b => b.onclick = async () => {
+    const bd = CFG.boards[Number(b.dataset.perm)];
+    bd.write = bd.write === "admin" ? "all" : "admin";
+    await saveCFG("boards"); SVC.log(ME, "게시판권한변경", `${bd.name} → ${bd.write}`);
+    renderAdminCfg();
+  });
+  $("#adminBody").querySelectorAll("[data-bdel]").forEach(b => b.onclick = async () => {
+    if (CFG.boards.length <= 1) return toast("최소 1개 게시판은 유지해야 합니다");
+    const bd = CFG.boards[Number(b.dataset.bdel)];
+    const posts = (await DB.all("posts")).filter(p => p.board === bd.key);
+    openModal(`
+      <h3>게시판 삭제</h3>
+      <div style="margin-top:8px;font-size:14px"><b>${esc(bd.name)}</b> 게시판과 게시글 <b style="color:var(--stamp)">${posts.length}건</b>이 함께 삭제됩니다. 계속할까요?</div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn ghost" id="bdCancel">취소</button><button class="btn danger" id="bdOk">삭제</button>
+      </div>`);
+    $("#bdCancel").onclick = closeModal;
+    $("#bdOk").onclick = async () => {
+      for (const p of posts) await DB.del("posts", p.postId);
+      CFG.boards.splice(Number(b.dataset.bdel), 1);
+      await saveCFG("boards"); SVC.log(ME, "게시판삭제", `${bd.name} (글 ${posts.length}건)`);
+      closeModal(); toast("삭제했습니다"); renderAdminCfg();
+    };
+  });
+  $("#cbExport").onclick = async () => {
+    const dump = {};
+    for (const st of ["users", "docs", "posts", "payroll", "attendance", "auditlog", "settings"]) dump[st] = await DB.all(st);
+    try {
+      const blob = new Blob([JSON.stringify(dump, null, 1)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `groupware-backup-${CORE.dateStr(new Date())}.json`;
+      a.click(); URL.revokeObjectURL(a.href);
+      SVC.log(ME, "백업내보내기");
+      toast("백업 파일을 내려받습니다");
+    } catch (e) { toast("이 환경에서는 내보내기를 지원하지 않습니다"); }
+  };
+  $("#cbImport").addEventListener("change", async e => {
+    const file = e.target.files[0]; if (!file) return;
+    try {
+      const dump = JSON.parse(await file.text());
+      for (const st of ["users", "docs", "posts", "payroll", "attendance", "auditlog", "settings"]) {
+        if (!Array.isArray(dump[st])) continue;
+        for (const row of await DB.all(st)) {
+          const keyName = { users: "id", docs: "docId", posts: "postId", payroll: "payId", attendance: "attId", auditlog: "logId", settings: "key" }[st];
+          await DB.del(st, row[keyName]);
+        }
+        for (const row of dump[st]) await DB.put(st, row);
+      }
+      await loadCFG();
+      SVC.log(ME, "백업가져오기", file.name);
+      toast("복원했습니다"); renderAdminCfg();
+    } catch (err) { toast("잘못된 백업 파일입니다"); }
+  });
+  $("#cbReset").onclick = () => {
+    openModal(`
+      <h3>전체 초기화</h3>
+      <div style="margin-top:8px;font-size:14px">모든 데이터가 삭제되고 샘플 데이터로 재시작합니다. 되돌릴 수 없습니다.</div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn ghost" id="rsCancel">취소</button><button class="btn danger" id="rsOk">초기화</button>
+      </div>`);
+    $("#rsCancel").onclick = closeModal;
+    $("#rsOk").onclick = () => { indexedDB.deleteDatabase("groupwareDB"); sessionStorage.clear(); location.reload(); };
+  };
+}
+
+async function renderAdminAtt() {
+  const ymSel = $("#aaYm")?.value || CORE.monthStr(new Date());
+  const atts = (await DB.all("attendance")).filter(a => a.date.startsWith(ymSel)).sort((a, b) => b.date.localeCompare(a.date));
+  $("#adminBody").innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>근태 기록 관리</h3><button class="btn small" id="aaAdd">＋ 수동 추가</button></div>
+      <label style="margin-top:0">조회 연월</label><input type="month" id="aaYm" value="${ymSel}">
+      <div class="table-wrap" style="margin-top:12px"><table class="grid">
+        <tr><th>날짜</th><th>사원</th><th>출근</th><th>퇴근</th><th>상태</th><th>관리</th></tr>
+        ${atts.length ? atts.map(a => `<tr><td>${a.date.slice(5)}</td><td>${esc(a.userName)}</td><td>${a.inTime || "-"}</td><td>${a.outTime || "-"}</td><td>${esc(a.status)}</td>
+          <td><button class="btn small ghost" data-edit="${a.attId}" style="padding:4px 8px">수정</button>
+              <button class="btn small danger" data-del="${a.attId}" style="padding:4px 8px">삭제</button></td></tr>`).join("")
+        : `<tr><td colspan="6" style="color:var(--sub)">기록 없음</td></tr>`}
+      </table></div>
+      <div style="font-size:12px;color:var(--sub);margin-top:8px">수정·삭제는 전건 활동 로그에 기록되며, 상태는 설정된 근무시간 기준으로 자동 재판정됩니다.</div>
+    </div>`;
+  $("#aaYm").onchange = renderAdminAtt;
+  $("#aaAdd").onclick = () => openAttForm();
+  $("#adminBody").querySelectorAll("[data-edit]").forEach(b => b.onclick = async () => openAttForm(await DB.get("attendance", Number(b.dataset.edit))));
+  $("#adminBody").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    await SVC.deleteAttendance(Number(b.dataset.del), ME);
+    toast("삭제했습니다"); renderAdminAtt();
+  });
+}
+async function openAttForm(a) {
+  USERS = await DB.all("users");
+  openModal(`
+    <h3>${a ? "근태 기록 수정" : "근태 수동 추가"}</h3>
+    <label>사원</label>
+    <select id="afUser" ${a ? "disabled" : ""}>${USERS.map(u => `<option value="${u.id}" ${a && a.userId === u.id ? "selected" : ""}>${esc(u.name)} ${esc(u.position)}</option>`).join("")}</select>
+    <label>날짜</label><input type="date" id="afDate" value="${a ? a.date : CORE.dateStr(new Date())}" ${a ? "disabled" : ""}>
+    <div class="row2">
+      <div><label>출근 시각</label><input type="time" id="afIn" value="${a ? a.inTime : "09:00"}"></div>
+      <div><label>퇴근 시각</label><input type="time" id="afOut" value="${a && a.outTime ? a.outTime : ""}"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn ghost" id="afCancel">취소</button><button class="btn" id="afSave">저장</button>
+    </div>`);
+  $("#afCancel").onclick = closeModal;
+  $("#afSave").onclick = async () => {
+    const r = await SVC.upsertAttendance({
+      attId: a ? a.attId : null, userId: $("#afUser").value, date: $("#afDate").value,
+      inTime: $("#afIn").value, outTime: $("#afOut").value || null,
+    }, ME);
+    if (!r.ok) return toast(r.msg);
+    closeModal(); toast(`저장했습니다 (${r.status})`); renderAdminAtt();
+  };
+}
+
+/* ── 초기화 ── */
+function openServerCfg() {
+  openModal(`
+    <h3>⚙️ 서버 연결 설정</h3>
+    <div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.6">
+      Google Apps Script 백엔드에 연결하면 60명이 같은 데이터를 공유합니다.<br>
+      비워두고 저장하면 이 기기 전용(로컬) 모드로 동작합니다.
+    </div>
+    <label>웹 앱 URL</label><input id="svUrl" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(localStorage.getItem("gw_api_url") || "")}">
+    <label>API 키</label><input id="svKey" placeholder="setup() 실행 로그의 API_KEY" value="${esc(localStorage.getItem("gw_api_key") || "")}">
+    <div id="svMsg" style="font-size:13px;margin-top:10px"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn ghost" id="svCancel">취소</button>
+      <button class="btn ghost" id="svTest">연결 테스트</button>
+      <button class="btn" id="svSave">저장 후 재시작</button>
+    </div>`);
+  $("#svCancel").onclick = closeModal;
+  $("#svTest").onclick = async () => {
+    const url = $("#svUrl").value.trim(), key = $("#svKey").value.trim();
+    if (!url) { $("#svMsg").innerHTML = `<span style="color:var(--sub)">URL이 비어 있습니다 (로컬 모드)</span>`; return; }
+    $("#svMsg").textContent = "연결 확인 중…";
+    try {
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key, action: "ping" }) });
+      const j = await res.json();
+      $("#svMsg").innerHTML = j.ok ? `<b style="color:var(--ok)">✓ 연결 성공</b>` : `<b style="color:var(--stamp)">✗ ${esc(j.msg || "실패")}</b>`;
+    } catch (e) { $("#svMsg").innerHTML = `<b style="color:var(--stamp)">✗ 연결 실패 — URL/배포 상태 확인</b>`; }
+  };
+  $("#svSave").onclick = () => {
+    const url = $("#svUrl").value.trim(), key = $("#svKey").value.trim();
+    if (url) { localStorage.setItem("gw_api_url", url); localStorage.setItem("gw_api_key", key); }
+    else { localStorage.removeItem("gw_api_url"); localStorage.removeItem("gw_api_key"); }
+    location.reload();
+  };
+}
+
+async function init() {
+  const remote = RemoteDB.isConfigured();
+  if (remote) {
+    try { await DB.open(); }
+    catch (e) {
+      alert("서버 연결 실패: " + e.message + "\n로컬 모드로 전환합니다.");
+      DB = LocalDB; globalThis.DB = DB;
+      await DB.open();
+    }
+  } else await DB.open();
+  const seeded = await seedIfEmpty();
+  await loadCFG();
+  const hint = $("#loginHint");
+  if (DB === RemoteDB) hint.innerHTML = `🌐 <b>서버 공용 모드</b>로 동작 중 — 전 직원이 같은 데이터를 공유합니다.`;
+  $("#btnSrvCfg").onclick = openServerCfg;
+  $("#btnLogin").onclick = doLogin;
+  $("#btnSignup").onclick = openSignup;
+  $("#loginPw").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  $("#btnLogout").onclick = doLogout;
+  $("#btnLogout2").onclick = doLogout;
+  $("#btnBell").onclick = openNotify;
+  $$(".nav-item[data-view],.tab[data-view]").forEach(b => b.onclick = () => go(b.dataset.view));
+  // 세션 복원
+  const uid = sessionStorage.getItem("gw_uid");
+  if (uid) { const u = await DB.get("users", uid); if (u) { ME = u; await enterApp(); } }
+  if (seeded) console.log("[groupware] 샘플 데이터 생성 완료");
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
